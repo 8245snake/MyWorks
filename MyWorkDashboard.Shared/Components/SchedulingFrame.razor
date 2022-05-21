@@ -1,0 +1,279 @@
+﻿@using MyWorkDashboard.Shared.Services
+@using System.ComponentModel
+
+@inject SchedulingServive schedulingServive
+
+<div style="height: 100%; width: 100%;">
+    <Row Style="height: 5%;">
+        <Col>
+        <DatePicker AllowClear="false" Size="@DatePickerSize.Large" TValue="DateTime?" Picker="@DatePickerType.Date" @bind-Value="_dateTime" OnChange="OnDateChanged" />
+        </Col>
+        <Col Offset="1" Span="8">
+        <Button Type="@ButtonType.Primary" Icon="@IconType.Outline.Form" Shape="@ButtonShape.Round" OnClick="AddNewSchedule">新規タスク</Button>
+        </Col>
+    </Row>
+
+    <Row Style="height: 95%;">
+        <div class="schedule-area">
+            
+            @foreach (TimeRow row in _rows.Rows)
+            {
+                <div class="time-row" style="@($"top:{row.RowTopPosition}px;")">
+                    <div class="time-row-item time-label">
+                        @(row.Time.ToString())
+                    </div>
+                    <div class="time-row-item time-border" >
+                    </div>
+                </div>
+            }
+            
+            @foreach (DutyBar bar in _duties.Bars)
+            {
+                <div class="time-bar @bar.AdditionalClass" style="@bar.BarStyle" @onclick="bar.OnClick">
+                    <p class="bar-text">@(bar.Duty.StartTime)～@(bar.Duty.EndTime)</p>
+                    <p class="bar-text">@bar.Duty.Title</p>
+                </div>
+            }
+
+        </div>
+    </Row>
+
+</div>
+
+<style>
+    .schedule-area {
+        position: relative;
+        background-color: white;
+        width: 100%;
+        overflow-y: scroll;
+    }
+
+    .time-row {
+        height: @(TimeRowCollection.RowHeight)px;
+        width: 100%;
+        position: absolute;
+        overflow: hidden;
+    }
+
+    .time-row-item {
+        float: left;
+    }
+
+    .time-label {
+        width: @(DutyBar.TimeWidth)px;
+    }
+
+    .time-border {
+        width: calc(100% - @(DutyBar.TimeWidth)px);
+        height: 100%;
+        border: 1px #e9e9e9 solid;
+    }
+
+    .time-bar {
+        width: calc(95% - @(DutyBar.TimeWidth)px);
+        position: absolute;
+        background-color: aquamarine;
+        opacity: 0.5;
+        border: 0.5px black solid;
+        cursor: pointer;
+    }
+
+    .time-bar:hover {
+        opacity: 1.0;
+    }
+
+    .bar-text {
+        color: black;
+        font-size: 12px;
+        opacity: 1.0;
+        margin-top: 0px;
+        margin-bottom: 0px;
+    }
+
+    .bar-selected {
+        background-color: bisque;
+        opacity: 1.0;
+    }
+
+</style>
+
+@code {
+
+    DateTime? _dateTime;
+    TimeRowCollection _rows = new TimeRowCollection();
+    DutyBarCollection _duties = new DutyBarCollection();
+
+
+    protected override void OnInitialized()
+    {
+        schedulingServive.SelectedDutyChanged -= OnSelectedDutyChanged;
+        schedulingServive.SelectedDutyChanged += OnSelectedDutyChanged;
+        schedulingServive.PropertyChanged -= OnPropertyChanged;
+        schedulingServive.PropertyChanged += OnPropertyChanged;
+        _duties.ItemSelected -= DutiesOnItemSelected;
+        _duties.ItemSelected += DutiesOnItemSelected;
+
+        _dateTime = DateTime.Now;
+        ShowTimeBars(DateTime.Now);
+        StateHasChanged();
+
+
+    }
+
+    private void OnSelectedDutyChanged(object? sender, EventArgs e)
+    {
+        if(sender == this) return;
+    }
+
+    private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        
+    }
+
+    private void DutiesOnItemSelected(object? sender, DutySelectedEventArgs e)
+    {
+        schedulingServive.ChangeSelectedDuty(e.SelectedDuty, this);
+    }
+
+    private void OnDateChanged(DateTimeChangedEventArgs e)
+    {
+        ShowTimeBars(e.Date);
+    }
+
+    private void ShowTimeBars(DateTime date)
+    {
+        _duties.Clear();
+
+        var repo = new MockDutyRepository();
+        foreach (Duty duty in repo.FindByDate(DateOnly.FromDateTime(date)))
+        {
+            int top = _rows.TimeToPixel(duty.StartTime);
+            int bottom = _rows.TimeToPixel(duty.EndTime);
+            _duties.Add(new DutyBar(duty, top, bottom - top));
+        }
+    }
+
+    private void AddNewSchedule()
+    {
+
+    }
+
+
+    class TimeRowCollection
+    {
+        public TimeRow[] Rows { get; }
+        public static int RowHeight = 60;
+        int _pixelByMinute => RowHeight / 60;
+
+        public TimeRowCollection()
+        {
+            Rows = Enumerable.Range(0, 24).Select(i => new TimeRow(new TimeOnly(i, 0), i * RowHeight)).ToArray();
+        }
+
+        public int TimeToPixel(TimeOnly time)
+        {
+            var nearyTime = Rows.First(r => r.Time.Hour == time.Hour);
+            int offset = time.Minute * _pixelByMinute;
+            return nearyTime.RowTopPosition + offset;
+        }
+    }
+
+
+    class TimeRow
+    {
+        public TimeOnly Time { get; }
+        public int RowTopPosition { get; }
+
+        public TimeRow(TimeOnly time, int rowTopPosition)
+        {
+            Time = time;
+            RowTopPosition = rowTopPosition;
+        }
+    }
+
+    class DutyBarCollection
+    {
+        public List<DutyBar> Bars { get; }
+        public event EventHandler<DutySelectedEventArgs> ItemSelected;
+
+        public DutyBarCollection()
+        {
+            Bars = new List<DutyBar>();
+        }
+
+        public void Add(DutyBar bar)
+        {
+            Bars.Add(bar);
+            bar.Selected -= BarOnSelected;
+            bar.Selected += BarOnSelected;
+        }
+
+        public void Clear()
+        {
+            foreach (DutyBar bar in Bars)
+            {
+                bar.Selected -= BarOnSelected;
+            }
+            Bars.Clear();
+        }
+
+        private void BarOnSelected(object? sender, EventArgs e)
+        {
+            foreach (DutyBar bar in Bars)
+            {
+                if (bar != sender)
+                {
+                    bar.IsSelected = false;
+                }
+            }
+
+            var dutyBar = sender as DutyBar;
+            if (dutyBar != null)
+            {
+                ItemSelected?.Invoke(this, new DutySelectedEventArgs(dutyBar.Duty));
+            }
+        }
+    }
+
+    class DutySelectedEventArgs : EventArgs
+    {
+        public Duty SelectedDuty { get; }
+
+        public DutySelectedEventArgs(Duty selectedDuty)
+        {
+            SelectedDuty = selectedDuty;
+        }
+    }
+
+    class DutyBar
+    {
+        public Duty Duty { get; }
+        public int Top { get; }
+        public int Height { get; }
+        public bool IsSelected { get; set; }
+
+        public static int TimeWidth = 40;
+
+        public event EventHandler Selected;
+
+        public DutyBar(Duty duty, int top, int height)
+        {
+            Duty = duty;
+            Top = top;
+            Height = height;
+            IsSelected = false;
+        }
+
+        public string BarStyle => $"top:{Top}px; height:{Height}px; left:{TimeWidth + 5}px;";
+
+        public string AdditionalClass => IsSelected ? "bar-selected" : "";
+
+        public Action<MouseEventArgs> OnClick => e =>
+        {
+            IsSelected = true;
+            Selected?.Invoke(this, EventArgs.Empty);
+        };
+    }
+
+
+}

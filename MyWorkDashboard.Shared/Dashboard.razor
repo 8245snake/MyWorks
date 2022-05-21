@@ -1,0 +1,54 @@
+﻿<div>
+
+    <Row>
+        <Col Span="6" Class="schedule-container">
+            @*カレンダーとか*@
+            <SchedulingFrame/>
+        </Col>
+        <Col Span="18">
+            <Row Class="input-container">
+                <Col Span="24" >
+                    @*詳細入力エリア*@
+                    <TaskInputForm/>
+                </Col>
+            </Row>
+            <Row Class="statistic-container">
+                <Col Span="24" >
+                    @*統計エリア*@
+                    <StatisticFrame/>
+                </Col>
+            </Row>
+        </Col>
+    </Row>
+
+</div>
+
+<style>
+    .schedule-container {
+        height: 100vh; 
+        padding: 20px;
+        margin: 0px;
+        background-color: #f5f5f5;
+        overflow-y: scroll;
+    }
+
+    .input-container {
+        height: 50vh; 
+        padding: 20px;
+        margin: 0px;
+        background-color: #f5f5f5;
+        overflow-y: scroll;
+    }
+
+    .statistic-container {
+        height: 50vh; 
+        padding: 20px;
+        margin: 0px;
+        background-color: #f5f5f5;
+        overflow-y: scroll;
+    }
+</style>
+
+@code {
+
+}

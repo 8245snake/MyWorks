@@ -2,9 +2,13 @@
 
 namespace WorkBord;
 
+/// <summary>
+/// 作業コードのリポジトリ抽象
+/// </summary>
 public interface IWorkCodeFamilyRepository
 {
-    void Add(WorkCodeFamily workCodeFamily);
-    void Remove(WorkCodeFamily workCodeFamily);
-    WorkCodeFamily FindById(string WorkCodeFamilyId);
+    void Register(WorkCodeFamily workCodeFamily);
+    void Delete(string familyId);
+    WorkCodeFamily? FindById(string familyId);
+    WorkCodeFamily[] GetAll();
 }

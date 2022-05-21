@@ -1,0 +1,166 @@
+﻿@using MyWorkDashboard.Shared.Services
+@using System.ComponentModel
+
+@inject SchedulingServive schedulingServive
+
+<div class="task-frame">
+
+    <Row Class="input-item-row">
+        <AntDesign.InputNumber Min="0" Max="23" Step="1" @bind-Value="@FromHour" />
+        <p>：</p>
+        <AntDesign.InputNumber Min="0" Max="60" Step="5" @bind-Value="@FromMinute" />
+        <p>～</p>
+        <AntDesign.InputNumber Min="0" Max="23" Step="1" @bind-Value="@ToHour" />
+        <p>：</p>
+        <AntDesign.InputNumber Min="0" Max="60" Step="5" @bind-Value="@ToMinute" />
+    </Row>
+
+    <Row Class="input-item-row">
+        <Col Span="24">
+            <AntDesign.Input Placeholder="タイトル" @bind-Value="Title" />
+        </Col>
+    </Row>
+
+    <Row Class="input-item-row">
+        <Col Span="24">
+            <AntDesign.TextArea Placeholder="内容" Rows="10" @bind-Value="Description" />
+        </Col>
+    </Row>
+
+    <Row Class="input-item-row">
+        <Col Span="24">
+            <Select DataSource="@_codes"
+                    @bind-Value="@_selectedValue"
+                    LabelName="@nameof(WorkCodeVM.Label)"
+                    ValueName="@nameof(WorkCodeVM.Value)"
+                    Placeholder="作業コードを選択してください"
+                    DefaultActiveFirstItem="false"
+                    EnableSearch>
+            </Select>
+        </Col>
+    </Row>
+
+    <Row Class="input-item-row">
+        <Col Span="24">
+            @if (_selectedValue != null)
+            {
+                <p>@($"{_selectedValue.Description}")</p>
+            }
+        </Col>
+    </Row>
+
+
+
+</div>
+
+<style>
+    .task-frame {
+        border: 1px black solid;
+        height: 100%;
+        padding: 10px;
+    }
+
+    .input-item-row {
+        margin-top: 10px;
+    }
+
+</style>
+
+@code
+{
+
+    class WorkCodeVM
+    {
+        public string Label { get; set; }
+        public WorkCodeFamily Value { get; set; }
+    }
+
+    List<WorkCodeVM> _codes;
+    private WorkCodeFamily? _selectedValue;
+
+
+
+    protected override void OnInitialized()
+    {
+        _codes = new List<WorkCodeVM>();
+        MockWorkCodeFamilyRepository repo = new MockWorkCodeFamilyRepository();
+        foreach (WorkCodeFamily family in repo.GetAll())
+        {
+            _codes.Add(new WorkCodeVM{Value = family, Label = family.ToString()});
+        }
+
+
+        schedulingServive.SelectedDutyChanged -= OnSelectedDutyChanged;
+        schedulingServive.SelectedDutyChanged += OnSelectedDutyChanged;
+        schedulingServive.PropertyChanged -= OnPropertyChanged;
+        schedulingServive.PropertyChanged += OnPropertyChanged;
+
+    }
+
+
+    private void OnSelectedDutyChanged(object? sender, EventArgs e)
+    {
+        this.Title = schedulingServive.SelectedDuty?.Title;
+        this.Description = schedulingServive.SelectedDuty?.Description;
+        StateHasChanged();
+    }
+
+    private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        StateHasChanged();
+    }
+
+    private int _fromHour;
+    private int _toHour;
+    private int _fromMinute;
+    private int _toMinute;
+
+    int FromHour
+    {
+        get => _fromHour;
+        set
+        {
+            _fromHour = value;
+        }
+    }
+
+    int FromMinute
+    {
+        get => _fromMinute;
+        set
+        {
+            if (value >= 60)
+            {
+                FromHour++;
+                _fromMinute = 0;
+                return;
+            }
+            _fromMinute = value;
+        }
+    }
+
+    int ToHour
+    {
+        get => _toHour;
+        set
+        {
+            _toHour = value;
+        }
+    }
+
+    int ToMinute
+    {
+        get => _toMinute;
+        set
+        {
+            _toMinute = value;
+        }
+    }
+
+    string? Title { get; set; }
+    string? Description { get; set; }
+
+
+
+
+}
