@@ -29,16 +29,32 @@
             
             @foreach (DutyBar bar in _duties.Bars)
             {
-                <div class="time-bar @bar.AdditionalClass" style="@bar.BarStyle" @onclick="bar.OnClick" >
-                    <p class="bar-text">@(bar.Duty.StartTime)～@(bar.Duty.EndTime)</p>
-                    <p class="bar-text">@bar.Duty.Title</p>
-                </div>
+                <Popover Placement="@Placement.Right" TitleTemplate="@GetBarPopupTitle(bar)" ContentTemplate="@GetBarPopupContent(bar)" Trigger="@(new[] {AntDesign.Trigger.Hover})">
+                    <div class="time-bar @bar.AdditionalClass" style="@bar.BarStyle" @onclick="bar.OnClick" >
+                        <p class="bar-text">@(bar.Duty.StartTime)～@(bar.Duty.EndTime)</p>
+                        <p class="bar-text">@bar.Duty.Title</p>
+                    </div>
+                </Popover>
             }
 
         </div>
     </Row>
 
 </div>
+
+@code
+{
+
+
+    private RenderFragment GetBarPopupTitle(DutyBar bar) => @<p>@bar.Duty.Title</p>;
+
+    
+    private RenderFragment GetBarPopupContent(DutyBar bar) =>
+        @<div>
+            <p>@bar.Duty.Description</p>
+        </div>;
+
+}
 
 <style>
     .schedule-area {

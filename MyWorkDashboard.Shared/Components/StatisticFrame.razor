@@ -17,24 +17,22 @@
 <div class="statistic-frame" hidden="@(_isEmpty)">
 
     <Row>
-        <Col Span="12">
-        <div style="padding: 10px">
-            <Table TItem="StatisticsTableViewModel" DataSource="@data" OnRowClick="OnRowClick" HidePagination="true" Size="TableSize.Small">
-                <Column @bind-Field="@context.Category">
-                    <a>@context.Category</a>
-                </Column>
-                <Column @bind-Field="@context.WorkCode">
-                    <a>@context.WorkCode</a>
-                </Column>
-                <Column @bind-Field="@context.Times">
-                    <a>@context.Times</a>
-                </Column>
-            </Table>
-        </div>
+        <Col Span="24">
+            <div style="padding: 10px">
+                <Table TItem="StatisticsTableViewModel" DataSource="@data" OnRowClick="OnRowClick" HidePagination="true" Size="TableSize.Small">
+                    <Column @bind-Field="@context.Category">
+                        <a>@context.Category</a>
+                    </Column>
+                    <Column @bind-Field="@context.WorkCode">
+                        <a>@context.WorkCode</a>
+                    </Column>
+                    <Column @bind-Field="@context.Times">
+                        <a>@context.Times</a>
+                    </Column>
+                </Table>
+            </div>
 
         </Col>
-
-        <Col Span="12"></Col>
 
     </Row>
 

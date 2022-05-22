@@ -44,6 +44,13 @@ public class SchedulingServive
         _dutyColorRepository = new MockDutyColorRepository();
     }
 
+    public SchedulingServive(IDutyRepository dutyRepository, IWorkCodeFamilyRepository workCodeFamilyRepository, IDutyColorRepository dutyColorRepository)
+    {
+        _dutyRepository = dutyRepository;
+        _workCodeFamilyRepository = workCodeFamilyRepository;
+        _dutyColorRepository = dutyColorRepository;
+    }
+
     public WorkCodeFamily[] GetAllWorkCodeFamily()
     {
         return _workCodeFamilyRepository.GetAll();
