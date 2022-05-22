@@ -8,6 +8,12 @@ namespace WorkBord;
 public interface IDutyRepository
 {
     /// <summary>
+    /// 新規IDを払い出す
+    /// </summary>
+    /// <returns>業務ID</returns>
+    public string GetNewId();
+
+    /// <summary>
     /// 業務を登録する。Idが同じものがあれば更新される。
     /// </summary>
     /// <param name="duty">業務</param>

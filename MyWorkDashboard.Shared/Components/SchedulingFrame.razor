@@ -3,7 +3,7 @@
 
 @inject SchedulingServive schedulingServive
 
-<div style="height: 100%; width: 100%;">
+<div style="height: 100%; width: 100%;" @oncontextmenu:stopPropagation @oncontextmenu:preventDefault>
     <Row Style="height: 5%;">
         <Col>
         <DatePicker AllowClear="false" Size="@DatePickerSize.Large" TValue="DateTime?" Picker="@DatePickerType.Date" @bind-Value="_dateTime" OnChange="OnDateChanged" />
@@ -18,7 +18,7 @@
             
             @foreach (TimeRow row in _rows.Rows)
             {
-                <div class="time-row" style="@($"top:{row.RowTopPosition}px;")">
+                <div class="time-row" style="@($"top:{row.RowTopPosition}px;")" >
                     <div class="time-row-item time-label">
                         @(row.Time.ToString())
                     </div>
@@ -29,7 +29,7 @@
             
             @foreach (DutyBar bar in _duties.Bars)
             {
-                <div class="time-bar @bar.AdditionalClass" style="@bar.BarStyle" @onclick="bar.OnClick">
+                <div class="time-bar @bar.AdditionalClass" style="@bar.BarStyle" @onclick="bar.OnClick" >
                     <p class="bar-text">@(bar.Duty.StartTime)～@(bar.Duty.EndTime)</p>
                     <p class="bar-text">@bar.Duty.Title</p>
                 </div>
@@ -72,7 +72,6 @@
     .time-bar {
         width: calc(95% - @(DutyBar.TimeWidth)px);
         position: absolute;
-        background-color: aquamarine;
         opacity: 0.5;
         border: 0.5px black solid;
         cursor: pointer;
@@ -108,26 +107,39 @@
     {
         schedulingServive.SelectedDutyChanged -= OnSelectedDutyChanged;
         schedulingServive.SelectedDutyChanged += OnSelectedDutyChanged;
-        schedulingServive.PropertyChanged -= OnPropertyChanged;
-        schedulingServive.PropertyChanged += OnPropertyChanged;
+        schedulingServive.DutyPropertyChanged -= OnPropertyChanged;
+        schedulingServive.DutyPropertyChanged += OnPropertyChanged;
         _duties.ItemSelected -= DutiesOnItemSelected;
         _duties.ItemSelected += DutiesOnItemSelected;
 
         _dateTime = DateTime.Now;
+        schedulingServive.ChangeSelectedDate(DateOnly.FromDateTime(_dateTime.Value), this);
+
         ShowTimeBars(DateTime.Now);
         StateHasChanged();
-
-
     }
 
     private void OnSelectedDutyChanged(object? sender, EventArgs e)
     {
         if(sender == this) return;
+
+        if (schedulingServive.SelectedDuty != null)
+        {
+            var selectedBar = _duties.Bars.FirstOrDefault(bar => bar.Duty.Id == schedulingServive.SelectedDuty.Id);
+            if (selectedBar != null)
+            {
+                selectedBar.OnClick.Invoke(new MouseEventArgs());
+            }
+        }
+        ShowTimeBars(_dateTime.Value);
+        StateHasChanged();
     }
 
-    private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    private void OnPropertyChanged(object? sender, EventArgs e)
     {
-        
+        if(sender == this) return;
+        ShowTimeBars(_dateTime.Value);
+        StateHasChanged();
     }
 
     private void DutiesOnItemSelected(object? sender, DutySelectedEventArgs e)
@@ -138,24 +150,60 @@
     private void OnDateChanged(DateTimeChangedEventArgs e)
     {
         ShowTimeBars(e.Date);
+        schedulingServive.ChangeSelectedDuty(null, this);
+        schedulingServive.ChangeSelectedDate(DateOnly.FromDateTime(_dateTime.Value), this);
     }
 
-    private void ShowTimeBars(DateTime date)
+    private void ShowTimeBars(DateTime datetime)
     {
-        _duties.Clear();
+        // 選択中のIDを覚えておく
+        var selectedId = _duties.Bars.FirstOrDefault(d => d.IsSelected)?.Duty.Id;
 
-        var repo = new MockDutyRepository();
-        foreach (Duty duty in repo.FindByDate(DateOnly.FromDateTime(date)))
+        _duties.Clear();
+        foreach (Duty duty in schedulingServive.FindDutiesByDate(DateOnly.FromDateTime(datetime)))
         {
             int top = _rows.TimeToPixel(duty.StartTime);
             int bottom = _rows.TimeToPixel(duty.EndTime);
-            _duties.Add(new DutyBar(duty, top, bottom - top));
+            bool isSelected = false;
+            if (!string.IsNullOrWhiteSpace(selectedId))
+            {
+                isSelected = ( duty.Id == selectedId);
+            }
+            string colorCode = schedulingServive.GetWorkCodeFamilyColorCode(duty.Id);
+            _duties.Add(new DutyBar(duty, top, bottom - top, colorCode) { IsSelected = isSelected });
         }
     }
 
     private void AddNewSchedule()
     {
+        if (_dateTime.Value == null) return;
+        
+        // 9時以降で開いているところに入れる(12時は除く)
 
+        DateOnly targetDate = DateOnly.FromDateTime(_dateTime.Value);
+        TimeOnly start = new TimeOnly(9, 0);
+        TimeOnly end = start.AddMinutes(60);
+
+        // その日の中で最後に終わる業務
+        var lastEndTime = schedulingServive.FindDutiesByDate(targetDate).MaxBy(d=>d.EndTime)?.EndTime;
+        if (lastEndTime != null)
+        {
+            if (lastEndTime.Value.Hour != 12)
+            {
+                start = lastEndTime.Value;
+            }
+            else
+            {
+                start = new TimeOnly(13, 0);
+            }
+            end = start.AddMinutes(60);
+        }
+
+        var createdDuty = schedulingServive.CreateNewDuty(targetDate, start, end);
+        ShowTimeBars(_dateTime.Value);
+        StateHasChanged();
+
+        schedulingServive.ChangeSelectedDuty(createdDuty, new object());
     }
 
 
@@ -251,20 +299,22 @@
         public int Top { get; }
         public int Height { get; }
         public bool IsSelected { get; set; }
+        private string _colorCode;
 
         public static int TimeWidth = 40;
 
         public event EventHandler Selected;
 
-        public DutyBar(Duty duty, int top, int height)
+        public DutyBar(Duty duty, int top, int height, string colorCode)
         {
             Duty = duty;
             Top = top;
             Height = height;
             IsSelected = false;
+            _colorCode = colorCode;
         }
 
-        public string BarStyle => $"top:{Top}px; height:{Height}px; left:{TimeWidth + 5}px;";
+        public string BarStyle => $"top:{Top}px; height:{Height}px; left:{TimeWidth + 5}px; background-color: {_colorCode};";
 
         public string AdditionalClass => IsSelected ? "bar-selected" : "";
 

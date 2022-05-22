@@ -1,0 +1,167 @@
+﻿
+
+<Row>
+    <Col>
+        <AntDesign.InputNumber Step="1" @bind-Value="@FromHour" Formatter="TimeFormatter"/>
+    </Col>
+    <Col>
+        <p class="input-time-label">：</p>
+    </Col>
+    <Col>
+        <AntDesign.InputNumber Step="StepMinutes" @bind-Value="@FromMinute" Formatter="TimeFormatter"/>
+    </Col>
+    <Col>
+        <p class="input-time-label">～</p>
+    </Col>
+    <Col>
+        <AntDesign.InputNumber Step="1" @bind-Value="@ToHour" Formatter="TimeFormatter"/>
+    </Col>
+    <Col>
+        <p class="input-time-label">：</p>
+    </Col>
+    <Col>
+        <AntDesign.InputNumber Step="StepMinutes" @bind-Value="@ToMinute" Formatter="TimeFormatter"/>
+    </Col>
+</Row>
+
+<style>
+    .input-time-label {
+        margin-top: 5px;
+        margin-bottom: 0px
+    }
+</style>
+
+@code {
+
+    private string TimeFormatter(int value) => string.Format("{0:00}", value);
+
+    [Parameter]
+    public int StepMinutes { get; set; } = 5;
+    
+    [Parameter]
+    public EventCallback<TimeRangeChangeEventArgs> OnTimeChange { get; set; }
+
+    private int _fromHour;
+    private int _toHour;
+    private int _fromMinute;
+    private int _toMinute;
+
+
+    [Parameter]
+    public TimeOnly? StartTime
+    {
+        get =>  new TimeOnly(FromHour, FromMinute);
+        set
+        {
+            if (value != null)
+            {
+                var time = value.Value;
+                if (time.Hour != _fromHour || time.Minute != _fromMinute)
+                {
+                    _fromHour = value.Value.Hour;
+                    _fromMinute = value.Value.Minute;
+                    RaiseTimeChangeEvent();
+                }
+            }
+            else
+            {
+                _fromHour = 0;
+                _fromMinute = 0;
+            }
+        }
+    }
+
+    [Parameter]
+    public TimeOnly? EndTime
+    {
+        get =>  new TimeOnly(ToHour, ToMinute);
+        set
+        {
+            if (value != null)
+            {
+                var time = value.Value;
+                if (time.Hour != _toHour || time.Minute != _toMinute)
+                {
+                    _toHour = value.Value.Hour;
+                    _toMinute = value.Value.Minute;
+                    RaiseTimeChangeEvent();
+                }
+            }
+            else
+            {
+                _toHour = 0;
+                _toMinute = 0;
+            }
+        }
+    }
+
+
+    int FromHour
+    {
+        get => _fromHour;
+        set
+        {
+            var start = this.StartTime.Value.AddHours(value - _fromHour);
+            if (start < this.EndTime.Value)
+            {
+                _fromHour = start.Hour;
+                _fromMinute = start.Minute;
+                RaiseTimeChangeEvent();
+            }
+        }
+    }
+
+    int FromMinute
+    {
+        get => _fromMinute;
+        set
+        {
+            var start = this.StartTime.Value.AddMinutes(value - _fromMinute);
+            if (start < this.EndTime.Value)
+            {
+                _fromHour = start.Hour;
+                _fromMinute = start.Minute;
+                RaiseTimeChangeEvent();
+            }
+        }
+    }
+
+    int ToHour
+    {
+        get => _toHour;
+        set
+        {
+            var end = this.EndTime.Value.AddHours(value - _toHour);
+            if (end > this.StartTime.Value)
+            {
+                _toHour = end.Hour;
+                _toMinute = end.Minute;
+                RaiseTimeChangeEvent();
+            }
+        }
+    }
+
+    int ToMinute
+    {
+        get => _toMinute;
+        set
+        {
+            var end = this.EndTime.Value.AddMinutes(value - _toMinute);
+            if (end > this.StartTime.Value)
+            {
+                _toHour = end.Hour;
+                _toMinute = end.Minute;
+                RaiseTimeChangeEvent();
+            }
+        }
+    }
+
+    private void RaiseTimeChangeEvent()
+    {
+        var start = new TimeOnly(FromHour, FromMinute);
+        var end = new TimeOnly(ToHour, ToMinute);
+        OnTimeChange.InvokeAsync(new TimeRangeChangeEventArgs(start, end));
+    }
+
+
+}

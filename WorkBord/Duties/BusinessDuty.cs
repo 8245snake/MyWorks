@@ -2,7 +2,7 @@
 
 public class BusinessDuty : Duty
 {
-    public string WorkCodeFamilyId { get; }
+    public string WorkCodeFamilyId { get; set; }
 
 
     public BusinessDuty(string id, DateOnly date, WorkTimeRange timeRange, WorkTask workTask, string workCodeFamilyId) 

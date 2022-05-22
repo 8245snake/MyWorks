@@ -4,20 +4,20 @@ public class WorkCodeFamily
 {
     public string Id { get; }
 
-    public string Description => $"{_workCategory.Name} > {_workCode.Id}({_workCode.Name})";
+    public string Description => $"{Category.Name} > {WorkCode.Id}({WorkCode.Name})";
 
-    private WorkCategory _workCategory;
-    private WorkCode _workCode;
+    public WorkCategory Category { get; }
+    public WorkCode WorkCode { get; }
 
-    public WorkCodeFamily(string id, WorkCategory workCategory, WorkCode workCode)
+    public WorkCodeFamily(string id, WorkCategory category, WorkCode workCode)
     {
         Id = id;
-        _workCategory = workCategory;
-        _workCode = workCode;
+        Category = category;
+        WorkCode = workCode;
     }
 
     public override string ToString()
     {
-        return $"{nameof(_workCategory)}: {_workCategory}, {nameof(_workCode)}: {_workCode}, {nameof(Id)}: {Id}";
+        return $"{nameof(Category)}: {Category}, {nameof(WorkCode)}: {WorkCode}, {nameof(Id)}: {Id}";
     }
 }

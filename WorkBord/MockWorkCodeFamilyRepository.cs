@@ -8,6 +8,7 @@ namespace WorkBord;
 public class MockWorkCodeFamilyRepository : IWorkCodeFamilyRepository
 {
     private List<WorkCodeFamily> _codeFamilies;
+    private int _maxId = 0;
 
     public MockWorkCodeFamilyRepository()
     {
@@ -17,6 +18,13 @@ public class MockWorkCodeFamilyRepository : IWorkCodeFamilyRepository
         Register(new WorkCodeFamily("F3", new WorkCategory("A", "開発"), new WorkCode("a3", "テスト")));
         Register(new WorkCodeFamily("F4", new WorkCategory("B", "保守"), new WorkCode("b1", "調査")));
         Register(new WorkCodeFamily("F5", new WorkCategory("B", "保守"), new WorkCode("b2", "現地対応")));
+        _maxId = 5;
+    }
+
+    public string GetNewId()
+    {
+        _maxId++;
+        return $"F{_maxId}";
     }
 
     public void Register(WorkCodeFamily workCodeFamily)

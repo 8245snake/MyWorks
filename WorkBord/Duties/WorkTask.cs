@@ -2,8 +2,8 @@
 
 public class WorkTask
 {
-    public string Title { get; }
-    public string Description { get; }
+    public string Title { get; set; }
+    public string Description { get; set; }
 
     public WorkTask(string title, string description)
     {

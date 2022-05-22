@@ -5,7 +5,7 @@
             @*カレンダーとか*@
             <SchedulingFrame/>
         </Col>
-        <Col Span="18">
+        <Col Span="18" Style="overflow-y: scroll;">
             <Row Class="input-container">
                 <Col Span="24" >
                     @*詳細入力エリア*@
@@ -28,24 +28,17 @@
         height: 100vh; 
         padding: 20px;
         margin: 0px;
-        background-color: #f5f5f5;
-        overflow-y: scroll;
     }
 
     .input-container {
-        height: 50vh; 
+        min-height: 50vh;
         padding: 20px;
         margin: 0px;
-        background-color: #f5f5f5;
-        overflow-y: scroll;
     }
 
     .statistic-container {
-        height: 50vh; 
         padding: 20px;
         margin: 0px;
-        background-color: #f5f5f5;
-        overflow-y: scroll;
     }
 </style>
 

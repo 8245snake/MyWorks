@@ -7,6 +7,7 @@ namespace WorkBord;
 /// </summary>
 public interface IWorkCodeFamilyRepository
 {
+    public string GetNewId();
     void Register(WorkCodeFamily workCodeFamily);
     void Delete(string familyId);
     WorkCodeFamily? FindById(string familyId);

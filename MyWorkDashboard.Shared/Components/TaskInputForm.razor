@@ -1,18 +1,28 @@
 ﻿@using MyWorkDashboard.Shared.Services
 @using System.ComponentModel
 
+@inject MessageService messageService
 @inject SchedulingServive schedulingServive
 
-<div class="task-frame">
+<div class="task-frame" hidden="@_isEmpty">
+    
 
-    <Row Class="input-item-row">
-        <AntDesign.InputNumber Min="0" Max="23" Step="1" @bind-Value="@FromHour" />
-        <p>：</p>
-        <AntDesign.InputNumber Min="0" Max="60" Step="5" @bind-Value="@FromMinute" />
-        <p>～</p>
-        <AntDesign.InputNumber Min="0" Max="23" Step="1" @bind-Value="@ToHour" />
-        <p>：</p>
-        <AntDesign.InputNumber Min="0" Max="60" Step="5" @bind-Value="@ToMinute" />
+    
+    <Row Class="input-item-row" Align="middle">
+        <Col>
+            <TimeRangeInput StepMinutes="10" StartTime="@StartTime" EndTime="@EndTime" OnTimeChange="OnSelectedTimeChange" />
+        </Col>
+        <Col Offset="1">
+            休憩時間
+            <Switch @bind-Checked="_isBreakTime" Disabled="true"/>@*まだ使えない*@
+        </Col>
+        <Col Offset="1">
+            <Popconfirm Placement="@Placement.Top" Title="削除してよろしいですか" OkText="削除する" CancelText="キャンセル" OnConfirm="OnDeleteButtonClick">
+                <Button Danger Type="@ButtonType.Primary">
+                    削除
+                </Button>
+            </Popconfirm>
+        </Col>
     </Row>
 
     <Row Class="input-item-row">
@@ -29,28 +39,37 @@
 
     <Row Class="input-item-row">
         <Col Span="24">
-            <Select DataSource="@_codes"
-                    @bind-Value="@_selectedValue"
-                    LabelName="@nameof(WorkCodeVM.Label)"
-                    ValueName="@nameof(WorkCodeVM.Value)"
-                    Placeholder="作業コードを選択してください"
-                    DefaultActiveFirstItem="false"
-                    EnableSearch>
-            </Select>
+            @if (schedulingServive.SelectedDuty is BusinessDuty)
+            {
+                <Select DataSource="@_codes"
+                        @bind-Value="@SelectedWorkCodeFamily"
+                        LabelName="@nameof(WorkCodeVM.Label)"
+                        ValueName="@nameof(WorkCodeVM.Value)"
+                        Placeholder="作業コードを選択してください"
+                        DefaultActiveFirstItem="false"
+                        EnableSearch>
+                </Select>
+            }
         </Col>
     </Row>
 
     <Row Class="input-item-row">
         <Col Span="24">
-            @if (_selectedValue != null)
+            @if (SelectedWorkCodeFamily != null)
             {
-                <p>@($"{_selectedValue.Description}")</p>
+                <p>@($"{SelectedWorkCodeFamily.Description}")</p>
             }
         </Col>
     </Row>
 
+</div>
 
-
+<div hidden="@(!_isEmpty)">
+    <Result Icon="exclamation-circle-outline"
+            Status="info"
+            Title="タスクが選択されていません"
+            SubTitle="左側のタイムラインでタスクを選択すると編集が可能になります。">
+    </Result>
 </div>
 
 <style>
@@ -69,6 +88,87 @@
 @code
 {
 
+    private bool _isEmpty => schedulingServive.SelectedDuty == null;
+    private bool _isBreakTime;
+
+    string? Title
+    {
+        get => schedulingServive.SelectedDuty?.Title;
+        set
+        {
+            if (schedulingServive.SelectedDuty != null)
+            {
+                schedulingServive.SelectedDuty.Title = value;
+                schedulingServive.RaiseDutyPropertyChanged(this);
+            }
+        }
+    }
+
+    string? Description 
+    {
+        get => schedulingServive.SelectedDuty?.Description;
+        set
+        {
+            if (schedulingServive.SelectedDuty != null)
+            {
+                schedulingServive.SelectedDuty.Description = value;
+                StateHasChanged();
+                schedulingServive.RaiseDutyPropertyChanged(this);
+            }
+        }
+    }
+
+    
+    TimeOnly? StartTime
+    {
+        get => schedulingServive.SelectedDuty?.StartTime;
+    }
+
+        
+    TimeOnly? EndTime
+    {
+        get => schedulingServive.SelectedDuty?.EndTime;
+    }
+    
+    private void OnSelectedTimeChange(TimeRangeChangeEventArgs e)
+    {
+        if (schedulingServive.SelectedDuty != null)
+        {
+            if (schedulingServive.SelectedDuty.StartTime != e.StartTime || schedulingServive.SelectedDuty.EndTime != e.EndTime)
+            {
+                schedulingServive.SelectedDuty.StartTime = e.StartTime;
+                schedulingServive.SelectedDuty.EndTime = e.EndTime;
+                StateHasChanged();
+                schedulingServive.RaiseDutyPropertyChanged(this);
+            }
+        }
+    }
+
+    private WorkCodeFamily? SelectedWorkCodeFamily
+    {
+        get
+        {
+            if (schedulingServive.SelectedDuty is BusinessDuty businessDuty)
+            {
+                return _codes.FirstOrDefault(c => c.Value.Id == businessDuty.WorkCodeFamilyId)?.Value;
+            }
+            return null;
+        }
+        set
+        {
+            if (schedulingServive.SelectedDuty is BusinessDuty businessDuty)
+            {
+                if (businessDuty.WorkCodeFamilyId != value.Id)
+                {
+                    businessDuty.WorkCodeFamilyId = value.Id;
+                    StateHasChanged();
+                    schedulingServive.RaiseDutyPropertyChanged(this);
+                }
+            }
+        }
+    }
+
+
     class WorkCodeVM
     {
         public string Label { get; set; }
@@ -76,24 +176,17 @@
     }
 
     List<WorkCodeVM> _codes;
-    private WorkCodeFamily? _selectedValue;
-
-
 
     protected override void OnInitialized()
     {
         _codes = new List<WorkCodeVM>();
-        MockWorkCodeFamilyRepository repo = new MockWorkCodeFamilyRepository();
-        foreach (WorkCodeFamily family in repo.GetAll())
+        foreach (WorkCodeFamily family in schedulingServive.GetAllWorkCodeFamily())
         {
-            _codes.Add(new WorkCodeVM{Value = family, Label = family.ToString()});
+            _codes.Add(new WorkCodeVM { Value = family, Label = family.ToString() });
         }
 
-
-        schedulingServive.SelectedDutyChanged -= OnSelectedDutyChanged;
         schedulingServive.SelectedDutyChanged += OnSelectedDutyChanged;
-        schedulingServive.PropertyChanged -= OnPropertyChanged;
-        schedulingServive.PropertyChanged += OnPropertyChanged;
+        schedulingServive.DutyPropertyChanged += OnPropertyChanged;
 
     }
 
@@ -105,62 +198,16 @@
         StateHasChanged();
     }
 
-    private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    private void OnPropertyChanged(object? sender, EventArgs e)
     {
+        if (sender == this) return;
         StateHasChanged();
     }
 
-    private int _fromHour;
-    private int _toHour;
-    private int _fromMinute;
-    private int _toMinute;
-
-    int FromHour
+    private void OnDeleteButtonClick()
     {
-        get => _fromHour;
-        set
-        {
-            _fromHour = value;
-        }
+        schedulingServive.DeleteDuty(schedulingServive.SelectedDuty.Id);
+        schedulingServive.ChangeSelectedDuty(null, this);
+        messageService.Info("削除されました");
     }
-
-    int FromMinute
-    {
-        get => _fromMinute;
-        set
-        {
-            if (value >= 60)
-            {
-                FromHour++;
-                _fromMinute = 0;
-                return;
-            }
-            _fromMinute = value;
-        }
-    }
-
-    int ToHour
-    {
-        get => _toHour;
-        set
-        {
-            _toHour = value;
-        }
-    }
-
-    int ToMinute
-    {
-        get => _toMinute;
-        set
-        {
-            _toMinute = value;
-        }
-    }
-
-    string? Title { get; set; }
-    string? Description { get; set; }
-
-
-
-
 }

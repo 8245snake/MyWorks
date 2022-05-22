@@ -8,10 +8,29 @@ public abstract class Duty
     protected WorkTimeRange _timeRange;
     protected WorkTask _workTask;
 
-    public TimeOnly StartTime => _timeRange.StartTime;
-    public TimeOnly EndTime => _timeRange.EndTime;
-    public string Title => _workTask.Title;
-    public string Description => _workTask.Description;
+    public TimeOnly StartTime
+    {
+        get => _timeRange.StartTime;
+        set => _timeRange.StartTime = value;
+    }
+
+    public TimeOnly EndTime
+    {
+        get => _timeRange.EndTime;
+        set => _timeRange.EndTime = value;
+    }
+
+    public string Title
+    {
+        get => _workTask.Title;
+        set => _workTask.Title = value;
+    }
+
+    public string Description
+    {
+        get => _workTask.Description;
+        set => _workTask.Description = value;
+    }
 
     protected Duty(string id, DateOnly date, WorkTimeRange timeRange, WorkTask workTask)
     {

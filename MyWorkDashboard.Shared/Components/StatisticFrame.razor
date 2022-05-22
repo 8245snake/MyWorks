@@ -1,7 +1,44 @@
-﻿
-<div class="statistic-frame">
-    
-    StatisticFrame
+﻿@using MyWorkDashboard.Shared.Services
+@using System.ComponentModel
+@using AntDesign.TableModels
+
+@inject SchedulingServive schedulingServive
+
+@if (_isEmpty)
+{
+    <Result Icon="pie-chart-outline"
+        Status="info"
+        Title="この日のタスクが1件もありません"
+        SubTitle="タスクを登録するとここに集計結果が表示されます。">
+    </Result>
+}
+
+
+<div class="statistic-frame" hidden="@(_isEmpty)">
+
+    <Row>
+        <Col Span="12">
+        <div style="padding: 10px">
+            <Table TItem="StatisticsTableViewModel" DataSource="@data" OnRowClick="OnRowClick" HidePagination="true" Size="TableSize.Small">
+                <Column @bind-Field="@context.Category">
+                    <a>@context.Category</a>
+                </Column>
+                <Column @bind-Field="@context.WorkCode">
+                    <a>@context.WorkCode</a>
+                </Column>
+                <Column @bind-Field="@context.Times">
+                    <a>@context.Times</a>
+                </Column>
+            </Table>
+        </div>
+
+        </Col>
+
+        <Col Span="12"></Col>
+
+    </Row>
+
+
 </div>
 
 <style>
@@ -12,5 +49,81 @@
 </style>
 
 @code {
+
+
+    private bool _isEmpty = true;
+
+    protected override void OnInitialized()
+    {
+
+        schedulingServive.DutyPropertyChanged += RetakeStatistics;
+        schedulingServive.SelectedDateChanged += RetakeStatistics;
+        schedulingServive.DutyDeleted += RetakeStatistics; ;
+
+
+        ChangeTargetDate(schedulingServive.SelectedDate);
+        StateHasChanged();
+    }
+
+
+    private void RetakeStatistics(object? sender, EventArgs e)
+    {
+        ChangeTargetDate(schedulingServive.SelectedDate);
+        StateHasChanged();
+    }
+
+    private void ChangeTargetDate(DateOnly? date)
+    {
+        _isEmpty = true;
+        if (date != null)
+        {
+            var duties = schedulingServive.FindDutiesByDate(date.Value);
+            if (duties.Length > 0)
+            {
+                _isEmpty = false;
+                data = schedulingServive.TakeStatisticsOfSelectedDay()?.Select(result => new StatisticsTableViewModel(result)).ToArray();
+            }
+        }
+    }
+
+    StatisticsTableViewModel[] data = new StatisticsTableViewModel[] { };
+
+    public class StatisticsTableViewModel
+    {
+        [DisplayName("分類")]
+        public string Category
+        {
+            get => $"{_dutyStaticticResult.Category?.Id}{_dutyStaticticResult.Category?.Name}";
+            set => throw new NotImplementedException("実装されていません");
+        }
+
+        [DisplayName("作業コード")]
+        public string WorkCode
+        {
+            get => $"{_dutyStaticticResult.Code?.Id}{_dutyStaticticResult.Code?.Name}";
+            set => throw new NotImplementedException("実装されていません");
+        }
+
+        [DisplayName("時間")]
+        public string Times
+        {
+            get => _dutyStaticticResult.Time.ToString(@"hh\:mm");
+            set => throw new NotImplementedException("実装されていません");
+        }
+
+
+        private DutyStaticticResult _dutyStaticticResult;
+
+        public StatisticsTableViewModel(DutyStaticticResult dutyStaticticResult)
+        {
+            _dutyStaticticResult = dutyStaticticResult;
+        }
+    }
+
+    void OnRowClick(RowData<StatisticsTableViewModel> row)
+    {
+        Console.WriteLine($"row {row.Data.Category} was clicked.");
+    }
+
 
 }

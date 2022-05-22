@@ -2,8 +2,8 @@
 
 public class WorkTimeRange
 {
-    public TimeOnly StartTime { get; }
-    public TimeOnly EndTime { get; }
+    public TimeOnly StartTime { get; set; }
+    public TimeOnly EndTime { get; set; }
 
     public WorkTimeRange(TimeOnly startTime, TimeOnly endTime)
     {
