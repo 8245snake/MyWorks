@@ -3,6 +3,7 @@
 @using AntDesign.TableModels
 
 @inject SchedulingServive schedulingServive
+@inject MessageService messageService
 
 @if (_isEmpty)
 {
@@ -19,15 +20,42 @@
     <Row>
         <Col Span="24">
             <div style="padding: 10px">
-                <Table TItem="StatisticsTableViewModel" DataSource="@data" OnRowClick="OnRowClick" HidePagination="true" Size="TableSize.Small">
-                    <Column @bind-Field="@context.Category">
-                        <a>@context.Category</a>
+                <Table TItem="StatisticsTableViewModel" DataSource="@_items" OnRowClick="OnRowClick" HidePagination="true" Size="TableSize.Small">
+                    <Column @bind-Field="@context.Category" Sortable >
+                        <p>@context.Category</p>
                     </Column>
-                    <Column @bind-Field="@context.WorkCode">
-                        <a>@context.WorkCode</a>
+                    <Column @bind-Field="@context.Description" Sortable >
+                        <p>@context.Description</p>
                     </Column>
-                    <Column @bind-Field="@context.Times">
-                        <a>@context.Times</a>
+                    <Column @bind-Field="@context.WorkCode" Sortable >
+                        @{
+                            TypographyCopyableConfig selfDefinedText = new TypographyCopyableConfig()
+                            {
+                                Text =@context.WorkCode,
+                                OnCopy = () =>
+                                {
+                                    messageService.Success("コピーしました", 1);
+                                }
+                            };
+                        }
+                        <div>
+                            <Paragraph Copyable CopyConfig="@selfDefinedText">@context.WorkCode</Paragraph>
+                        </div>
+                    </Column>
+                    <Column @bind-Field="@context.Times" Sortable >
+                        @{
+                            TypographyCopyableConfig selfDefinedText = new TypographyCopyableConfig()
+                            {
+                                Text =@context.Times.Replace(":",""),
+                                OnCopy = () =>
+                                {
+                                    messageService.Success("コピーしました", 1);
+                                }
+                            };
+                        }
+                        <div>
+                            <Paragraph Copyable CopyConfig="@selfDefinedText">@context.Times</Paragraph>
+                        </div>
                     </Column>
                 </Table>
             </div>
@@ -79,26 +107,37 @@
             if (duties.Length > 0)
             {
                 _isEmpty = false;
-                data = schedulingServive.TakeStatisticsOfSelectedDay()?.Select(result => new StatisticsTableViewModel(result)).ToArray();
+                _items = schedulingServive?
+                    .TakeStatisticsOfSelectedDay()?
+                    .Select(result => new StatisticsTableViewModel(result))?
+                    .OrderBy(model => model.WorkCode)?
+                    .ToArray();
             }
         }
     }
 
-    StatisticsTableViewModel[] data = new StatisticsTableViewModel[] { };
+    StatisticsTableViewModel[] _items = new StatisticsTableViewModel[] { };
 
     public class StatisticsTableViewModel
     {
         [DisplayName("分類")]
         public string Category
         {
-            get => $"{_dutyStaticticResult.Category?.Id}{_dutyStaticticResult.Category?.Name}";
+            get => $"{_dutyStaticticResult.Category?.Id} {_dutyStaticticResult.Category?.Name}".Trim();
+            set => throw new NotImplementedException("実装されていません");
+        }
+
+        [DisplayName("概要")]
+        public string Description
+        {
+            get => $"{_dutyStaticticResult.Code?.Name}";
             set => throw new NotImplementedException("実装されていません");
         }
 
         [DisplayName("作業コード")]
         public string WorkCode
         {
-            get => $"{_dutyStaticticResult.Code?.Id}{_dutyStaticticResult.Code?.Name}";
+            get => $"{_dutyStaticticResult.Code?.Id}";
             set => throw new NotImplementedException("実装されていません");
         }
 
