@@ -109,4 +109,33 @@ public class SchedulingServive
         DutiesOfDay dd = new DutiesOfDay(_dutyRepository.FindByDate(this.SelectedDate.Value));
         return dd.TakeStatistics(_workCodeFamilyRepository);
     }
+
+    public IEnumerable<WorkTimeRange> GetFreeTimeSpans(DateOnly date)
+    {
+        var duties = FindDutiesByDate(date).OrderBy(d => d.StartTime).ToArray();
+        if (duties.Length == 0)
+        {
+            yield return new WorkTimeRange(new TimeOnly(0, 0), new TimeOnly(23, 59));
+            yield break;
+        }
+
+        var lastTime = new TimeOnly(0, 0);
+        foreach (Duty duty in duties)
+        {
+            var range = new WorkTimeRange(lastTime, duty.StartTime);
+            if (range.Span.TotalMinutes > 0)
+            {
+                yield return range;
+            }
+
+            lastTime = duty.EndTime;
+        }
+
+        var latestRange = new WorkTimeRange(lastTime, new TimeOnly(23, 59));
+        if (latestRange.Span.Minutes > 0)
+        {
+            yield return latestRange;
+        }
+
+    }
 }

@@ -17,6 +17,13 @@ public class WorkTimeRange
         EndTime = startTime.AddMinutes(spanMinutes);
     }
 
+    public TimeSpan Span => EndTime - StartTime;
+
+    public bool Contains(TimeOnly time)
+    {
+        return StartTime <= time && time <= EndTime;
+    }
+
     public override string ToString()
     {
         return $"{StartTime}~{EndTime}";

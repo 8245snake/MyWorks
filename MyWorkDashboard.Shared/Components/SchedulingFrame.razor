@@ -18,7 +18,7 @@
             
             @foreach (TimeRow row in _rows.Rows)
             {
-                <div class="time-row" style="@($"top:{row.RowTopPosition}px;")" >
+                <div class="time-row" style="@($"top:{row.RowTopPosition}px;")" @onclick="@row.OnClick">
                     <div class="time-row-item time-label">
                         @(row.Time.ToString())
                     </div>
@@ -88,6 +88,10 @@
         border: 1px #e9e9e9 solid;
     }
 
+    .time-border:hover {
+        background-color: ivory;
+    }
+
     .time-bar {
         width: calc(95% - @(DutyBar.TimeWidth)px);
         position: absolute;
@@ -118,17 +122,15 @@
 @code {
 
     DateTime? _dateTime;
-    TimeRowCollection _rows = new TimeRowCollection();
-    DutyBarCollection _duties = new DutyBarCollection();
-
+    private TimeRowCollection _rows;
+    private readonly DutyBarCollection _duties = new DutyBarCollection();
 
     protected override void OnInitialized()
     {
-        schedulingServive.SelectedDutyChanged -= OnSelectedDutyChanged;
+        _rows = new TimeRowCollection(AppendNewSchedule);
+
         schedulingServive.SelectedDutyChanged += OnSelectedDutyChanged;
-        schedulingServive.DutyPropertyChanged -= OnPropertyChanged;
         schedulingServive.DutyPropertyChanged += OnPropertyChanged;
-        _duties.ItemSelected -= DutiesOnItemSelected;
         _duties.ItemSelected += DutiesOnItemSelected;
 
         _dateTime = DateTime.Now;
@@ -196,7 +198,7 @@
     private void AddNewSchedule()
     {
         if (_dateTime.Value == null) return;
-        
+
         // 9時以降で開いているところに入れる(12時は除く)
 
         DateOnly targetDate = DateOnly.FromDateTime(_dateTime.Value);
@@ -225,6 +227,33 @@
         schedulingServive.ChangeSelectedDuty(createdDuty, new object());
     }
 
+    private void AppendNewSchedule(TimeOnly selectedTimeBlock)
+    {
+        if (_dateTime.Value == null) return;
+
+        int defaultSpanMinute = 30;
+
+        TimeOnly start = selectedTimeBlock;
+        TimeOnly end = selectedTimeBlock.AddMinutes(defaultSpanMinute);
+        DateOnly date = DateOnly.FromDateTime(_dateTime.Value);
+        
+        // 指定した時刻を含む空き時間を検索する
+        var ranges = schedulingServive.GetFreeTimeSpans(date).ToArray();
+        WorkTimeRange? freeTimeRange = ranges.FirstOrDefault(range => range.Contains(start) || range.Contains(end));
+        if (freeTimeRange == null) return;
+
+        if (!freeTimeRange.Contains(start))
+        {
+            start = freeTimeRange.StartTime;
+        }
+
+        end = freeTimeRange.EndTime;
+
+        var createdDuty = schedulingServive.CreateNewDuty(date, start, end);
+        ShowTimeBars(_dateTime.Value);
+        StateHasChanged();
+        schedulingServive.ChangeSelectedDuty(createdDuty, new object());
+    }
 
     class TimeRowCollection
     {
@@ -232,9 +261,11 @@
         public static int RowHeight = 60;
         int _pixelByMinute => RowHeight / 60;
 
-        public TimeRowCollection()
+        public TimeRowCollection(Action<TimeOnly> appendingFunc)
         {
-            Rows = Enumerable.Range(0, 24).Select(i => new TimeRow(new TimeOnly(i, 0), i * RowHeight)).ToArray();
+            Rows = Enumerable.Range(0, 24)
+                .Select(i => new TimeRow(new TimeOnly(i, 0), i * RowHeight, appendingFunc))
+                .ToArray();
         }
 
         public int TimeToPixel(TimeOnly time)
@@ -250,12 +281,19 @@
     {
         public TimeOnly Time { get; }
         public int RowTopPosition { get; }
+        Action<TimeOnly> _appendingFunc;
 
-        public TimeRow(TimeOnly time, int rowTopPosition)
+        public TimeRow(TimeOnly time, int rowTopPosition, Action<TimeOnly> appendingFunc)
         {
             Time = time;
             RowTopPosition = rowTopPosition;
+            _appendingFunc = appendingFunc;
         }
+
+        public Action<MouseEventArgs> OnClick => e =>
+        {
+            _appendingFunc.Invoke(this.Time);
+        };
     }
 
     class DutyBarCollection

@@ -1,19 +1,14 @@
 ﻿
 
+using MyWorkDashboard.Shared.Services;
 using WorkBord;
 using WorkBord.Duties;
 using WorkBord.WorkCodeFamilies;
 
-IWorkCodeFamilyRepository codeRepo = new MockWorkCodeFamilyRepository();
-foreach (WorkCodeFamily workCodeFamily in codeRepo.GetAll())
-{
-    Console.WriteLine(workCodeFamily);
-}
 
-IDutyRepository dutyRepo = new MockDutyRepository();
-foreach (Duty duty in dutyRepo.FindByDate(DateOnly.FromDateTime(DateTime.Now)))
-{
-    Console.WriteLine(duty);
-}
+SchedulingServive servive = new SchedulingServive(new MockDutyRepository(), new MockWorkCodeFamilyRepository(), new MockDutyColorRepository());
+
+var arr = servive.GetFreeTimeSpans(DateOnly.FromDateTime(DateTime.Now)).ToArray();
+
 
 Console.ReadKey();
