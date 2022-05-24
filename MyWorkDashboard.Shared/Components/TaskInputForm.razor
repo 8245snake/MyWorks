@@ -98,7 +98,7 @@
         {
             if (schedulingServive.SelectedDuty != null)
             {
-                schedulingServive.SelectedDuty.Title = value;
+                schedulingServive.SelectedDuty.Title = value + "";
                 schedulingServive.RaiseDutyPropertyChanged(this);
             }
         }
@@ -111,7 +111,7 @@
         {
             if (schedulingServive.SelectedDuty != null)
             {
-                schedulingServive.SelectedDuty.Description = value;
+                schedulingServive.SelectedDuty.Description = value + "";
                 StateHasChanged();
                 schedulingServive.RaiseDutyPropertyChanged(this);
             }
