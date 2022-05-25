@@ -1,21 +1,21 @@
 ﻿<div>
 
     <Row>
-        <Col Span="6" Class="schedule-container">
+        <Col Class="schedule-container" Xs="24" Sm="24" Md="12" Lg="8" Xl="6">
             @*カレンダーとか*@
-            <SchedulingFrame/>
+            <SchedulingFrame />
         </Col>
-        <Col Span="18" Style="overflow-y: scroll;">
+        <Col Style="overflow-y: scroll;" Xs="24" Sm="24" Md="12" Lg="16" Xl="18">
             <Row Class="input-container">
-                <Col Span="24" >
-                    @*詳細入力エリア*@
-                    <TaskInputForm/>
+                <Col Span="24">
+                        @*詳細入力エリア*@
+                <TaskInputForm />
                 </Col>
             </Row>
             <Row Class="statistic-container">
-                <Col Span="24" >
-                    @*統計エリア*@
-                    <StatisticFrame/>
+                <Col Span="24">
+                        @*統計エリア*@
+                <StatisticFrame />
                 </Col>
             </Row>
         </Col>
@@ -25,7 +25,7 @@
 
 <style>
     .schedule-container {
-        height: 100vh; 
+        height: 100vh;
         padding: 20px;
         margin: 0px;
     }
@@ -41,6 +41,41 @@
         padding: 20px;
         margin: 0px;
     }
+
+    @@media screen and (min-width:480px) {
+        .statistic-container {
+            display: none;
+        }
+
+        .schedule-container {
+            height: 50vh;
+        }
+
+        /*　for iPhone Landscape　(iPhone 横)　*/
+    }
+
+    @@media screen and (min-width:768px) and ( max-width:1024px) {
+        /*　for iPad 　*/
+        .statistic-container {
+            display: inherit;
+        }
+
+        .schedule-container {
+            height: 100vh;
+        }
+    }
+
+    @@media screen and (min-width:1024px) {
+        /*　for PC　*/
+        .statistic-container {
+            display: inherit;
+        }
+
+        .schedule-container {
+            height: 100vh;
+        }
+    }
+
 </style>
 
 @code {
