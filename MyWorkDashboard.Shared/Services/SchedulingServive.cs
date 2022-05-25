@@ -110,25 +110,30 @@ public class SchedulingServive
         return dd.TakeStatistics(_workCodeFamilyRepository);
     }
 
+    /// <summary>
+    /// 指定した日のうち予定が入っていない期間を列挙する
+    /// </summary>
+    /// <param name="date">日付</param>
+    /// <returns>予定が入っていない時間</returns>
     public IEnumerable<WorkTimeRange> GetFreeTimeSpans(DateOnly date)
     {
-        var duties = FindDutiesByDate(date).OrderBy(d => d.StartTime).ToArray();
-        if (duties.Length == 0)
+        var mergedRanges = GetMergedTimeRange(FindDutiesByDate(date)).ToArray();
+        if (mergedRanges.Length == 0)
         {
             yield return new WorkTimeRange(new TimeOnly(0, 0), new TimeOnly(23, 59));
             yield break;
         }
 
         var lastTime = new TimeOnly(0, 0);
-        foreach (Duty duty in duties)
+        foreach (var mergedRange in mergedRanges)
         {
-            var range = new WorkTimeRange(lastTime, duty.StartTime);
+            var range = new WorkTimeRange(lastTime, mergedRange.StartTime);
             if (range.Span.TotalMinutes > 0)
             {
                 yield return range;
             }
 
-            lastTime = duty.EndTime;
+            lastTime = mergedRange.EndTime;
         }
 
         var latestRange = new WorkTimeRange(lastTime, new TimeOnly(23, 59));
@@ -137,5 +142,35 @@ public class SchedulingServive
             yield return latestRange;
         }
 
+    }
+
+    private static IEnumerable<WorkTimeRange> GetMergedTimeRange(Duty[] duties)
+    {
+        WorkTimeRange lastRange = null;
+        foreach (Duty duty in duties.OrderBy(d=>d.StartTime))
+        {
+            if (lastRange == null)
+            {
+                lastRange = new WorkTimeRange(duty.StartTime, duty.EndTime);
+                continue;
+            }
+
+            // つながっているか
+            bool isNeighboring = (duty.StartTime <= lastRange.EndTime);
+            if (isNeighboring)
+            {
+                lastRange.EndTime = duty.EndTime > lastRange.EndTime ? duty.EndTime : lastRange.EndTime;
+                continue;
+            }
+
+            yield return lastRange;
+
+            lastRange = new WorkTimeRange(duty.StartTime, duty.EndTime);
+        }
+
+        if (lastRange != null)
+        {
+            yield return lastRange;
+        }
     }
 }

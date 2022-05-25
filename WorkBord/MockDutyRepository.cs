@@ -50,4 +50,24 @@ public class MockDutyRepository : IDutyRepository
     {
         return _duties.Where(d => d.Date == date).ToArray();
     }
+
+    #region テスト用
+
+    public void DeleteAll()
+    {
+        _duties.Clear();
+    }
+
+    public void AppendNew(DateOnly date, string fromTime, string toTime, string summary)
+    {
+        var id = GetNewId();
+        var model = new BusinessDuty(id, date, 
+            new WorkTimeRange(TimeOnly.ParseExact(fromTime, "HH:mm"), TimeOnly.ParseExact(toTime, "HH:mm")),
+            new WorkTask(summary, ""), "F1");
+
+        _duties.Add(model);
+    }
+
+
+    #endregion
 }

@@ -31,8 +31,7 @@
             {
                 <Popover Placement="@Placement.Right" TitleTemplate="@GetBarPopupTitle(bar)" ContentTemplate="@GetBarPopupContent(bar)" Trigger="@(new[] {AntDesign.Trigger.Hover})">
                     <div class="time-bar @bar.AdditionalClass" style="@bar.BarStyle" @onclick="bar.OnClick" >
-                        <p class="bar-text">@(bar.Duty.StartTime)～@(bar.Duty.EndTime)</p>
-                        <p class="bar-text">@bar.Duty.Title</p>
+                        <p class="bar-text">@(bar.Duty.StartTime)～@(bar.Duty.EndTime)  @bar.Duty.Title</p>
                     </div>
                 </Popover>
             }
@@ -98,6 +97,7 @@
         opacity: 0.5;
         border: 0.5px black solid;
         cursor: pointer;
+        overflow: hidden;
     }
 
     .time-bar:hover {
@@ -231,7 +231,7 @@
     {
         if (_dateTime.Value == null) return;
 
-        int defaultSpanMinute = 30;
+        int defaultSpanMinute = 60;
 
         TimeOnly start = selectedTimeBlock;
         TimeOnly end = selectedTimeBlock.AddMinutes(defaultSpanMinute);
@@ -239,15 +239,19 @@
         
         // 指定した時刻を含む空き時間を検索する
         var ranges = schedulingServive.GetFreeTimeSpans(date).ToArray();
-        WorkTimeRange? freeTimeRange = ranges.FirstOrDefault(range => range.Contains(start) || range.Contains(end));
+        WorkTimeRange? freeTimeRange = ranges.LastOrDefault(range => range.Contains(start) || range.Contains(end));
         if (freeTimeRange == null) return;
 
         if (!freeTimeRange.Contains(start))
         {
             start = freeTimeRange.StartTime;
+            end = start.AddMinutes(defaultSpanMinute);
         }
 
-        end = freeTimeRange.EndTime;
+        if (end > freeTimeRange.EndTime)
+        {
+            end = freeTimeRange.EndTime;
+        }
 
         var createdDuty = schedulingServive.CreateNewDuty(date, start, end);
         ShowTimeBars(_dateTime.Value);
