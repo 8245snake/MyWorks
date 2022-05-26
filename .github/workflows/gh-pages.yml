@@ -16,11 +16,11 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 5.0.100
+          dotnet-version: 5.0.x
 
       # Publish the site
       - name: Publish
-        run: dotnet publish MyWorks/MyWorkDashboard/Client/MyWorkDashboard.Client.csproj -p:GHPages=true -c:Release -o:public
+        run: dotnet publish MyWorkDashboard/Client/MyWorkDashboard.Client.csproj -p:GHPages=true -c:Release -o:public
 
       # Deploy the site
       - name: Deploy
