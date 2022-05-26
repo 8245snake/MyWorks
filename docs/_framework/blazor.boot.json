@@ -24,8 +24,8 @@
       "Microsoft.Extensions.Primitives.dll": "sha256-YColTWA58whC+8aBjv1O7HgsyYrbHTba601EkNDWAlo=",
       "Microsoft.JSInterop.dll": "sha256-gppQEHEjrfHBcX3V77MQEJcI3eSMctCFqylPGT2rBoQ=",
       "Microsoft.JSInterop.WebAssembly.dll": "sha256-lGzGmghWC2n88jfdnt\/ZlgOBbU9tjhYhdRO8P4zXTXo=",
-      "MyWorkDashboard.Client.dll": "sha256-I8ta6P5+\/5WNOHVKr\/yWTESOLJvLfOe\/pYNvtU1uEX4=",
-      "MyWorkDashboard.Shared.dll": "sha256-n+qQKABkG+YvEZqzNsyJRBx0tL52RQFfnHw2tzonAF8=",
+      "MyWorkDashboard.Client.dll": "sha256-GJhlPLpviQjjX68U3I\/GvQsC82ErlPaD0gbll193vV8=",
+      "MyWorkDashboard.Shared.dll": "sha256-amTrAAM4XyIcSQ6gAMbTK2Mgvwiqgug3hbqN+nRZg\/c=",
       "netstandard.dll": "sha256-xFv6gmpb2LRSh\/3h3VxIZd\/5QbqXn+GlchDtPcP4RZg=",
       "OneOf.dll": "sha256-K99lDyL6VrtTDYGRk5o+Q3caW25Uogee\/1e7aIvpgLY=",
       "System.Collections.Concurrent.dll": "sha256-1MMGADKZgC8Xu5raGjlU\/BMBlsV3HV47B49C6QpgtS4=",
@@ -39,7 +39,7 @@
       "System.Console.dll": "sha256-6S5mKBuzadtEMXaPR9jZsILhijJsSji\/J7zKyi8XUBk=",
       "System.Data.Common.dll": "sha256-k0WbSNC1ghf+HoiO70Mgg\/EHc3cceDul6\/KA\/imhVV0=",
       "System.dll": "sha256-qFt7Sn46LEHHeD8406OAazAmy0nu+cf36x6xFLQgpbA=",
-      "System.Linq.dll": "sha256-GO8UMHlgZ3aMCzwone4aUDY9JFW2Mp803x84VsdXRZo=",
+      "System.Linq.dll": "sha256-9QNa6IBrFs+gJGEYqefpRrv5g6UepZhD2PospFUPEoE=",
       "System.Linq.Expressions.dll": "sha256-eSDCgH3JkNhyJPraaSKw6nqJ5ufdx3fdzFCQZrrpFO4=",
       "System.Linq.Queryable.dll": "sha256-sD8KKyj664pYGFYh8WBQdMbMvB+A+yhBzdU8aIM6zts=",
       "System.Memory.dll": "sha256-cilbrj2y8YPM74\/GdSYOZIR4a3fy5EBmHK6mzOyMAEM=",
@@ -56,7 +56,7 @@
       "System.Text.Json.dll": "sha256-1B0VfWffAXuZC4eYLkMxe0107GUk6+kzX5qAhQhE9ks=",
       "System.Text.RegularExpressions.dll": "sha256-wK1R7NeiDcmN3XN6z32hDN\/7\/ipGU\/RPpKgAog8s8rA=",
       "System.Threading.dll": "sha256-HbOsHf6ldbphotCpqZpAPHh8fwhhYPEpR1rr+LzbaPg=",
-      "WorkBord.dll": "sha256-O\/qfNZuY2XDULZEntrxLf0p+JVemeLSF2kw1bwaJQuw="
+      "WorkBord.dll": "sha256-imEURhD9hUj4brptdI23E1sNHNciruYIwu+8SRV6UAY="
     },
     "extensions": null,
     "lazyAssembly": null,

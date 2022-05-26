@@ -105,7 +105,7 @@
       "url": "_framework\/icudt_no_CJK.dat.br"
     },
     {
-      "hash": "sha256-nihgABRRcJFCQOo886UvKu51bZH\/mtg51lIJc3jjjao=",
+      "hash": "sha256-y+tTY+PwYYqIu1PZ\/8purkQsoqM7P5kYT6i\/0t7ATBQ=",
       "url": "_framework\/blazor.boot.json.br"
     },
     {
@@ -177,11 +177,11 @@
       "url": "_framework\/Microsoft.JSInterop.WebAssembly.dll.br"
     },
     {
-      "hash": "sha256-OmZ40bbHtgjExMSRrvdpMKniFxlg4at7bIX2MmacMkI=",
+      "hash": "sha256-A6Y896W2OAAKJ91yc3+0SMF3S6tWwAHLTZ412NHfYEs=",
       "url": "_framework\/MyWorkDashboard.Client.dll.br"
     },
     {
-      "hash": "sha256-a58LTyYQ7RLJf4r51jcraf2XsceCknm1cIjjoTkHbeA=",
+      "hash": "sha256-GbqA9sLmm9u\/ao\/MPC0YNooHIcJJHD\/13o0CoGOG9pQ=",
       "url": "_framework\/MyWorkDashboard.Shared.dll.br"
     },
     {
@@ -237,7 +237,7 @@
       "url": "_framework\/System.dll.br"
     },
     {
-      "hash": "sha256-wfDzLj+U9\/nxdUF11maSl9ez6hriEVSeafqhrcuf7B8=",
+      "hash": "sha256-LohvLnTt4WEGBRFSbn9H7HhkGUmDvLR5KuCX1qUwfdg=",
       "url": "_framework\/System.Linq.dll.br"
     },
     {
@@ -305,7 +305,7 @@
       "url": "_framework\/System.Threading.dll.br"
     },
     {
-      "hash": "sha256-WjW\/nEyB+mX9a96keJzxR3UnKfT4fj257uj821Ge4oA=",
+      "hash": "sha256-JZJ\/jmyAj5sXfdccHiMI\/s\/F8nl8daeFn9j3nRZZeTY=",
       "url": "_framework\/WorkBord.dll.br"
     },
     {
@@ -1629,5 +1629,5 @@
       "url": "brotliloader.min.js"
     }
   ],
-  "version": "YxuH\/J36"
+  "version": "QZcEAE3F"
 };
