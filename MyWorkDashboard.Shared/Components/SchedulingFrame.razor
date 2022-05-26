@@ -9,7 +9,9 @@
             <DatePicker AllowClear="false" Size="@DatePickerSize.Large" TValue="DateTime?" Picker="@DatePickerType.Date" @bind-Value="_dateTime" OnChange="OnDateChanged" />
         </Col>
         <Col Offset="1" Span="8">
-            <Button Type="@ButtonType.Primary" Icon="@IconType.Outline.Form" Shape="@ButtonShape.Round" OnClick="AddNewSchedule">新規タスク</Button>
+            <Tooltip Placement="@Placement.Bottom" Title=@("新規タスク追加")>
+                <Button Type="@ButtonType.Primary" Icon="@IconType.Outline.Form" Shape="@ButtonShape.Round" OnClick="AddNewSchedule"></Button>
+            </Tooltip>
         </Col>
     </Row>
 

@@ -44,4 +44,9 @@ public abstract class Duty
     {
         return $"{nameof(Id)}: {Id}, {nameof(Date)}: {Date}, {nameof(_timeRange)}: {_timeRange}, {nameof(_workTask)}: {_workTask}";
     }
+
+    public bool Contains(TimeOnly time)
+    {
+        return _timeRange.Contains(time);
+    }
 }

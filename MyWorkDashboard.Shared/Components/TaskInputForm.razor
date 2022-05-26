@@ -5,22 +5,30 @@
 @inject SchedulingServive schedulingServive
 
 <div class="task-frame" hidden="@_isEmpty">
-    
 
-    
     <Row Class="input-item-row" Align="middle">
         <Col>
-            <TimeRangeInput StepMinutes="10" StartTime="@StartTime" EndTime="@EndTime" OnTimeChange="OnSelectedTimeChange" />
+            <Tooltip Placement="@Placement.Bottom" Title=@("前の予定まで")>
+                <Button Type="@ButtonType.Default" Icon="@IconType.Outline.StepBackward" Class="control-buttons" OnClick="OnBackButtonClick"></Button>
+            </Tooltip>
         </Col>
-        <Col Offset="1">
+        <Col>
+            <TimeRangeInput StepMinutes="10" StartTime="@StartTime" EndTime="@EndTime" OnTimeChange="OnSelectedTimeChange"/>
+        </Col>
+        <Col>
+            <Tooltip Placement="@Placement.Bottom" Title=@("次の予定まで")>
+                <Button Type="@ButtonType.Default" Icon="@IconType.Outline.StepForward" Class="control-buttons" OnClick="OnForwordButtonClick"></Button>
+            </Tooltip>
+        </Col>
+@*        <Col Offset="1">
             休憩時間
-            <Switch @bind-Checked="_isBreakTime" Disabled="true"/>@*まだ使えない*@
-        </Col>
+            <Switch @bind-Checked="_isBreakTime" Disabled="true"/>
+        </Col>*@
         <Col Offset="1">
-            <Popconfirm Placement="@Placement.Top" Title="削除してよろしいですか" OkText="削除する" CancelText="キャンセル" OnConfirm="OnDeleteButtonClick">
-                <Button Danger Type="@ButtonType.Primary" Shape="@ButtonShape.Round">
-                    削除
-                </Button>
+            <Popconfirm Placement="@Placement.Bottom" Title="削除してよろしいですか" OkText="削除する" CancelText="キャンセル" OnConfirm="OnDeleteButtonClick">
+                <Tooltip Placement="@Placement.Bottom" Title=@("タスク削除")>
+                    <Button Danger Type="@ButtonType.Primary" Shape="@ButtonShape.Round" Icon="@IconType.Outline.Delete"></Button>
+                </Tooltip>
             </Popconfirm>
         </Col>
     </Row>
@@ -73,6 +81,11 @@
 </div>
 
 <style>
+
+    .control-buttons {
+        margin: 2px 10px;
+    }
+
     .task-frame {
         border: 1px black solid;
         height: 100%;
@@ -82,7 +95,6 @@
     .input-item-row {
         margin-top: 10px;
     }
-
 </style>
 
 @code
@@ -118,18 +130,18 @@
         }
     }
 
-    
+
     TimeOnly? StartTime
     {
         get => schedulingServive.SelectedDuty?.StartTime;
     }
 
-        
+
     TimeOnly? EndTime
     {
         get => schedulingServive.SelectedDuty?.EndTime;
     }
-    
+
     private void OnSelectedTimeChange(TimeRangeChangeEventArgs e)
     {
         if (schedulingServive.SelectedDuty != null)
@@ -208,6 +220,45 @@
     {
         schedulingServive.DeleteDuty(schedulingServive.SelectedDuty.Id);
         schedulingServive.ChangeSelectedDuty(null, this);
-        messageService.Info("削除されました");
+        messageService.Info("削除されました", 1);
+    }
+
+    private void OnBackButtonClick()
+    {
+        if(schedulingServive.SelectedDate == null)  return;
+        if(schedulingServive.SelectedDuty == null)  return;
+
+        TimeOnly start = schedulingServive.SelectedDuty.StartTime;
+
+        // todo 重なっている場合
+        var found = schedulingServive
+            .FindDutiesByDate(schedulingServive.SelectedDate.Value)
+            .Where(d=>d.EndTime < start)
+            .MinBy(d => (start - d.EndTime).TotalMinutes);
+
+        if(found == null)  return;
+
+        schedulingServive.SelectedDuty.StartTime = found.EndTime;
+        schedulingServive.RaiseDutyPropertyChanged(this);
+
+    }
+
+    private void OnForwordButtonClick()
+    {
+        if(schedulingServive.SelectedDate == null)  return;
+        if(schedulingServive.SelectedDuty == null)  return;
+
+        TimeOnly end = schedulingServive.SelectedDuty.EndTime;
+
+        // todo 重なっている場合
+        var found = schedulingServive
+            .FindDutiesByDate(schedulingServive.SelectedDate.Value)
+            .Where(d=>d.StartTime > end)
+            .MinBy(d => (d.StartTime - end).TotalMinutes);
+
+        if(found == null)  return;
+
+        schedulingServive.SelectedDuty.EndTime = found.StartTime;
+        schedulingServive.RaiseDutyPropertyChanged(this);
     }
 }
