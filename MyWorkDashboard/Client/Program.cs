@@ -13,6 +13,7 @@ builder.Services.AddScoped(sp => new SchedulingServive(
     new MockWorkCodeFamilyRepository(),
     new MockDutyColorRepository(),
     new MockToDoRepository()));
+builder.Services.AddScoped(sp => new ControlService(null));
 builder.Services.AddAntDesign();
 
 await builder.Build().RunAsync();

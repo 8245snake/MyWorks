@@ -3,6 +3,7 @@
 
 @inject MessageService messageService
 @inject SchedulingServive schedulingServive
+@inject ControlService controlService
 
 <div class="task-frame" hidden="@_isEmpty">
 
@@ -41,13 +42,13 @@
 
     <Row Class="input-item-row">
         <Col Span="24">
-        <AntDesign.Input Placeholder="タイトル" @bind-Value="Title" />
+            <AntDesign.Input Placeholder="タイトル" @bind-Value="Title" OnFocus="() => { controlService.EnableImeMode();}"/>
         </Col>
     </Row>
 
     <Row Class="input-item-row">
         <Col Span="24">
-        <AntDesign.TextArea Placeholder="内容" Rows="10" @bind-Value="Description" />
+            <AntDesign.TextArea Placeholder="内容" Rows="10" @bind-Value="Description"  OnFocus="() => { controlService.EnableImeMode();}"/>
         </Col>
     </Row>
 
