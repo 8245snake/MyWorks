@@ -12,12 +12,20 @@
                     <TaskInputForm />
                 </Col>
             </Row>
-            <Row Class="statistic-container">
-                <Col Span="24">
-                        @*統計エリア*@
-                    <StatisticFrame />
-                </Col>
-            </Row>
+            <Collapse DefaultActiveKey="@(new[]{"1"})">
+                <Panel Header="ToDo" Key="1">
+                    @*ToDoリスト*@
+                    <ToDoList/>
+                </Panel>
+                <Panel Header="集計" Key="2">
+                    <Row Class="statistic-container">
+                        <Col Span="24">
+                            @*統計エリア*@
+                            <StatisticFrame/>
+                        </Col>
+                    </Row>
+                </Panel>
+            </Collapse>
         </Col>
     </Row>
 
@@ -37,7 +45,6 @@
     }
 
     .statistic-container {
-        min-height: 50vh;
         padding: 20px;
         margin: 0px;
     }

@@ -19,7 +19,7 @@ namespace MyWorkDashboard.Shared.Services.Tests
             var repo = new MockDutyRepository();
             repo.DeleteAll();
             DateOnly today = DateOnly.FromDateTime(DateTime.Now);
-            SchedulingServive servive = new SchedulingServive(repo, new MockWorkCodeFamilyRepository(), new MockDutyColorRepository());
+            SchedulingServive servive = new SchedulingServive(repo, new MockWorkCodeFamilyRepository(), new MockDutyColorRepository(), new MockToDoRepository());
 
             var freeTimes = servive.GetFreeTimeSpans(today).ToArray();
 
@@ -35,7 +35,7 @@ namespace MyWorkDashboard.Shared.Services.Tests
             repo.DeleteAll();
             DateOnly today = DateOnly.FromDateTime(DateTime.Now);
             repo.AppendNew(today, "09:00", "10:00", "タスク1");
-            SchedulingServive servive = new SchedulingServive(repo, new MockWorkCodeFamilyRepository(), new MockDutyColorRepository());
+            SchedulingServive servive = new SchedulingServive(repo, new MockWorkCodeFamilyRepository(), new MockDutyColorRepository(), new MockToDoRepository());
 
             var freeTimes = servive.GetFreeTimeSpans(today).ToArray();
 
@@ -56,7 +56,7 @@ namespace MyWorkDashboard.Shared.Services.Tests
             repo.AppendNew(today, "09:00", "10:00", "タスク1");
             repo.AppendNew(today, "10:00", "12:00", "タスク2");
             repo.AppendNew(today, "13:00", "14:00", "タスク3");
-            SchedulingServive servive = new SchedulingServive(repo, new MockWorkCodeFamilyRepository(), new MockDutyColorRepository());
+            SchedulingServive servive = new SchedulingServive(repo, new MockWorkCodeFamilyRepository(), new MockDutyColorRepository(), new MockToDoRepository());
 
             var freeTimes = servive.GetFreeTimeSpans(today).ToArray();
 
@@ -78,7 +78,7 @@ namespace MyWorkDashboard.Shared.Services.Tests
             repo.AppendNew(today, "09:00", "10:00", "タスク1");
             repo.AppendNew(today, "11:00", "12:00", "タスク2");
             repo.AppendNew(today, "09:30", "11:30", "タスク3"); //タスク1と2にまたがっている（不整合）
-            SchedulingServive servive = new SchedulingServive(repo, new MockWorkCodeFamilyRepository(), new MockDutyColorRepository());
+            SchedulingServive servive = new SchedulingServive(repo, new MockWorkCodeFamilyRepository(), new MockDutyColorRepository(), new MockToDoRepository());
 
             var freeTimes = servive.GetFreeTimeSpans(today).ToArray();
 
@@ -99,7 +99,7 @@ namespace MyWorkDashboard.Shared.Services.Tests
             repo.AppendNew(today, "09:00", "10:00", "タスク1");
             repo.AppendNew(today, "11:00", "12:00", "タスク2");
             repo.AppendNew(today, "09:30", "10:30", "タスク3"); //タスク1にまたがっている（不整合）
-            SchedulingServive servive = new SchedulingServive(repo, new MockWorkCodeFamilyRepository(), new MockDutyColorRepository());
+            SchedulingServive servive = new SchedulingServive(repo, new MockWorkCodeFamilyRepository(), new MockDutyColorRepository(), new MockToDoRepository());
 
             var freeTimes = servive.GetFreeTimeSpans(today).ToArray();
 

@@ -6,9 +6,11 @@
 <div style="height: 100%; width: 100%;" @oncontextmenu:stopPropagation @oncontextmenu:preventDefault>
     <Row Style="height: 5%;">
         <Col>
-            <DatePicker AllowClear="false" Size="@DatePickerSize.Large" TValue="DateTime?" Picker="@DatePickerType.Date" @bind-Value="_dateTime" OnChange="OnDateChanged" />
+            <Button Type="@ButtonType.Default" Icon="@IconType.Outline.Left" Shape="@ButtonShape.Circle" OnClick="GoYesterday"></Button>
+            <DatePicker AllowClear="false" Size="@DatePickerSize.Large" TValue="DateTime?" Picker="@DatePickerType.Date" @bind-Value="_dateTime" OnChange="OnDateChanged"/>
+            <Button Type="@ButtonType.Default" Icon="@IconType.Outline.Right" Shape="@ButtonShape.Circle" OnClick="GoTommorrow"></Button>
         </Col>
-        <Col Offset="1" Span="8">
+        <Col Offset="1">
             <Tooltip Placement="@Placement.Bottom" Title=@("新規タスク追加")>
                 <Button Type="@ButtonType.Primary" Icon="@IconType.Outline.Form" Shape="@ButtonShape.Round" OnClick="AddNewSchedule"></Button>
             </Tooltip>
@@ -177,6 +179,19 @@
         schedulingServive.ChangeSelectedDate(DateOnly.FromDateTime(_dateTime.Value), this);
     }
 
+    private void GoYesterday()
+    {
+        _dateTime = _dateTime.Value.AddDays(-1);
+        OnDateChanged(new DateTimeChangedEventArgs(){Date = _dateTime.Value});
+    }
+
+    private void GoTommorrow()
+    {
+        _dateTime = _dateTime.Value.AddDays(1);
+        OnDateChanged(new DateTimeChangedEventArgs(){Date = _dateTime.Value});
+    }
+
+
     private void ShowTimeBars(DateTime datetime)
     {
         // 選択中のIDを覚えておく
@@ -199,39 +214,17 @@
 
     private void AddNewSchedule()
     {
-        if (_dateTime.Value == null) return;
+        if (_dateTime == null) return;
 
-        // 9時以降で開いているところに入れる(12時は除く)
-
-        DateOnly targetDate = DateOnly.FromDateTime(_dateTime.Value);
-        TimeOnly start = new TimeOnly(9, 0);
-        TimeOnly end = start.AddMinutes(60);
-
-        // その日の中で最後に終わる業務
-        var lastEndTime = schedulingServive.FindDutiesByDate(targetDate).MaxBy(d=>d.EndTime)?.EndTime;
-        if (lastEndTime != null)
-        {
-            if (lastEndTime.Value.Hour != 12)
-            {
-                start = lastEndTime.Value;
-            }
-            else
-            {
-                start = new TimeOnly(13, 0);
-            }
-            end = start.AddMinutes(60);
-        }
-
-        var createdDuty = schedulingServive.CreateNewDuty(targetDate, start, end);
+        Duty created = schedulingServive.AddNewSchedule(DateOnly.FromDateTime(_dateTime.Value));
         ShowTimeBars(_dateTime.Value);
         StateHasChanged();
-
-        schedulingServive.ChangeSelectedDuty(createdDuty, new object());
+        schedulingServive.ChangeSelectedDuty(created, new object());
     }
 
     private void AppendNewSchedule(TimeOnly selectedTimeBlock)
     {
-        if (_dateTime.Value == null) return;
+        if (_dateTime == null) return;
 
         int defaultSpanMinute = 60;
 

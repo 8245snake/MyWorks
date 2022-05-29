@@ -1,0 +1,123 @@
+﻿@using System.ComponentModel.DataAnnotations
+
+<Card Hoverable="true" Style="padding: 2px" BodyStyle="padding: 2px">
+    <Body>
+    <Row>
+        <Col Span="23">
+            <div style="width: 100%; height: 100%;">
+                <AntDesign.Input @ref="_textBox" TValue="string" @bind-value="_description" Style="@($"display: {_textDisplayStyle};")" OnPressEnter="OnPressEnter" OnBlur="OnBlur"/>
+                <div @onclick="OnClick" style="@($"display : {_paragraphDisplayStyle}; width: 100%; height: 100%;")">@_description</div>
+            </div>
+        </Col>
+        <Col Span="1" >
+            <Dropdown>
+                <Overlay>
+                    <Menu>
+                        <MenuItem OnClick="CreateTask">
+                            予定を作成する
+                        </MenuItem>
+                        <MenuItem OnClick="SendTomorrow">
+                            翌日に送る
+                        </MenuItem>
+                    </Menu>
+                </Overlay>
+                <ChildContent>
+                    <Icon Type="menu" Theme="outline"/>
+                </ChildContent>
+            </Dropdown>
+        </Col>
+    </Row>
+        
+    </Body>
+</Card>
+
+@code {
+
+    [Parameter, Required]
+    public ToDoItemVm Model { get; set; }
+
+    [Parameter]
+    public EventCallback StateChanged { get; set; }
+
+    AntDesign.Input<string> _textBox;
+
+    private string _description
+    {
+        get => this.Model.Todo.Description;
+        set
+        {
+            this.Model.Todo.Description = value;
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                _canDeleteOnEmpty = true;
+            }
+        }
+    }
+
+    private bool _isEditting = false;
+    private string _textDisplayStyle => _isEditting ? "inherit" : "none";
+    private string _paragraphDisplayStyle => _isEditting ? "none" : "inherit";
+    private bool _canDeleteOnEmpty = false;
+
+    // クリックするたびにキャレットが移動するのを防ぐためのフラグ
+    private bool _focusHold = false;
+
+    protected override void OnInitialized()
+    {
+        _isEditting = Model.IsEditing;
+    }
+
+    private void OnClick()
+    {
+        _isEditting = true; // 編集可能にする
+        _focusHold = false; // キャレット移動可能にする
+    }
+
+    private void OnPressEnter()
+    {
+        if (_textBox != null)
+        {
+            _textBox.Blur();
+        }
+    }
+
+    private void OnBlur()
+    {
+        _isEditting = false;
+        if (_canDeleteOnEmpty && string.IsNullOrWhiteSpace(_description))
+        {
+            // 一度でも文字が入力されたことがあった場合は空にしたときに削除する
+            DeleteTask();
+            return;
+        }
+        Model.Update();
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (_textBox != null && !_focusHold)
+        {
+            // フォーカスを当てて、キャレットを末尾に移動する
+            _textBox.Focus();
+            _focusHold = true;
+        }
+    }
+
+    private void CreateTask()
+    {
+        Model.CreateTask();
+        StateChanged.InvokeAsync(this);
+    }
+
+    private void SendTomorrow()
+    {
+        Model.SendTomorrow();
+        StateChanged.InvokeAsync(this);
+    }
+
+    private void DeleteTask()
+    {
+        Model.DeleteTask();
+        StateChanged.InvokeAsync(this);
+    }
+}

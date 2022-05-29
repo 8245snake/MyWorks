@@ -28,10 +28,13 @@ namespace MyWorkDesktop
             string masterFilePath = Path.Combine(baseDir, "master.txt");
             TsvWorkCodeFamilyRepository masterRepo = new TsvWorkCodeFamilyRepository(masterFilePath);
 
-            string jsonDir = Path.Combine(baseDir, "json");
-            JsonDutyRepository dataRepo = new JsonDutyRepository(jsonDir);
+            string dutyDataDir = Path.Combine(baseDir, "json");
+            JsonDutyRepository dataRepo = new JsonDutyRepository(dutyDataDir);
 
-            serviceCollection.AddScoped(sp => new SchedulingServive(dataRepo, masterRepo, masterRepo));
+            string todoDataDir = Path.Combine(baseDir, "todo");
+            JsonToDoItemRepository todoRepo = new JsonToDoItemRepository(todoDataDir);
+
+            serviceCollection.AddScoped(sp => new SchedulingServive(dataRepo, masterRepo, masterRepo, todoRepo));
 
             Resources.Add("services", serviceCollection.BuildServiceProvider());
         }

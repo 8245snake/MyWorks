@@ -1,0 +1,109 @@
+﻿@using AntDesign
+@using MyWorkDashboard.Shared.Services
+@using WorkBord.ToDoTasks
+
+@inject SchedulingServive schedulingServive
+@inject NotificationService notificationService
+
+@if (_todoItems.Count == 0)
+{
+    <Empty>
+        <DescriptionTemplate>
+            <Paragraph>ToDoリストがありません</Paragraph>
+        </DescriptionTemplate>
+        <ChildContent>
+            <Button Type="@ButtonType.Primary" OnClick="AddNewItem">新規作成</Button>
+        </ChildContent>
+    </Empty>
+}
+else
+{
+
+    <div style="margin: 10px 0px;">
+        <Button OnClick="AddNewItem" Type="@ButtonType.Primary" Shape="@ButtonShape.Round" Icon="@IconType.Outline.Plus">追加</Button>
+
+        <span>サイズ</span>
+        <RadioGroup TValue="int" @bind-Value="span">
+            <Radio RadioButton Value="@(8)">小</Radio>
+            <Radio RadioButton Value="@(12)">中</Radio>
+            <Radio RadioButton Value="@(24)">大</Radio>
+        </RadioGroup>
+    </div>
+
+    <AntDesign.Row>
+        @foreach (var item in _todoItems)
+        {
+            <AntDesign.Col Span="@(span)">
+                <ToDoCard Model="item" StateChanged="StateHasChanged"/>
+            </AntDesign.Col>
+        }
+    </AntDesign.Row>
+}
+
+
+@code {
+    int span = 8;
+
+    private List<ToDoItemVm> _todoItems = new List<ToDoItemVm>();
+
+    protected override void OnInitialized()
+    {
+        schedulingServive.SelectedDateChanged += OnSelectedDateChanged;
+        schedulingServive.ToDoItemChanged += OnToDoItemChanged;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var count = schedulingServive.MoveTodayOlderTodoItems();
+        ShowTodoItems();
+        if (count > 0)
+        {
+            await notificationService.Open(new NotificationConfig()
+            {
+                NotificationType = NotificationType.Info,
+                Message = "ToDoリスト",
+                Description = $"{count}件の古い予定が本日に持ち越されました",
+                Duration = 3,
+            });
+        }
+    }
+
+    private void ShowTodoItems()
+    {
+        _todoItems.Clear();
+        if (schedulingServive.SelectedDate != null)
+        {
+            _todoItems.AddRange(schedulingServive.FindToDoItemsByDate(schedulingServive.SelectedDate.Value)
+                .Select(CreateViewModel));
+        }
+    }
+
+    private void OnToDoItemChanged(object? sender, EventArgs e)
+    {
+        if(sender == this) return;
+        ShowTodoItems();
+        StateHasChanged();
+    }
+
+    private void OnSelectedDateChanged(object? sender, EventArgs e)
+    {
+        ShowTodoItems();
+        this.StateHasChanged();
+    }
+
+    private void AddNewItem()
+    {
+        if (schedulingServive.SelectedDate == null) return;
+        var item = schedulingServive.CreateNewToDoItem(schedulingServive.SelectedDate.Value);
+        ToDoItemVm vm = CreateViewModel(item);
+        _todoItems.Add(vm);
+        vm.Select();
+    }
+
+    private ToDoItemVm CreateViewModel(ToDoItem item)
+    {
+        return  new ToDoItemVm(item, _todoItems, schedulingServive);
+    }
+
+
+}
