@@ -8,26 +8,32 @@
 
     <Row Class="input-item-row" Align="middle">
         <Col>
-            <Tooltip Placement="@Placement.Bottom" Title=@("前の予定まで")>
-                <Button Type="@ButtonType.Default" Icon="@IconType.Outline.StepBackward" Class="control-buttons" OnClick="OnBackButtonClick"></Button>
-            </Tooltip>
+        <Tooltip Placement="@Placement.Bottom" Title=@("前の予定まで")>
+            <Button Type="@ButtonType.Default" Icon="@IconType.Outline.StepBackward" Class="control-buttons" OnClick="OnBackButtonClick"></Button>
+        </Tooltip>
         </Col>
         <Col>
-            <TimeRangeInput StepMinutes="10" StartTime="@StartTime" EndTime="@EndTime" OnTimeChange="OnSelectedTimeChange"/>
+        <TimeRangeInput StepMinutes="10" StartTime="@StartTime" EndTime="@EndTime" OnTimeChange="OnSelectedTimeChange" />
         </Col>
         <Col>
-            <Tooltip Placement="@Placement.Bottom" Title=@("次の予定まで")>
-                <Button Type="@ButtonType.Default" Icon="@IconType.Outline.StepForward" Class="control-buttons" OnClick="OnForwordButtonClick"></Button>
-            </Tooltip>
+        <Tooltip Placement="@Placement.Bottom" Title=@("次の予定まで")>
+            <Button Type="@ButtonType.Default" Icon="@IconType.Outline.StepForward" Class="control-buttons" OnClick="OnForwordButtonClick"></Button>
+        </Tooltip>
         </Col>
-@*        <Col Offset="1">
+        @*        <Col Offset="1">
             休憩時間
             <Switch @bind-Checked="_isBreakTime" Disabled="true"/>
-        </Col>*@
+            </Col>*@
+
         <Col Offset="1">
+            <Tooltip Placement="@Placement.Bottom" Title=@("ToDoリストに送る")>
+                <Button Type="@ButtonType.Default" Shape="@ButtonShape.Round" Class="control-buttons" Icon="@IconType.Outline.VerticalAlignBottom" OnClick="SendToDoList"></Button>
+            </Tooltip>
+        </Col>
+        <Col>
             <Popconfirm Placement="@Placement.Bottom" Title="削除してよろしいですか" OkText="削除する" CancelText="キャンセル" OnConfirm="OnDeleteButtonClick">
                 <Tooltip Placement="@Placement.Bottom" Title=@("タスク削除")>
-                    <Button Danger Type="@ButtonType.Primary" Shape="@ButtonShape.Round" Icon="@IconType.Outline.Delete"></Button>
+                    <Button Danger Type="@ButtonType.Primary" Shape="@ButtonShape.Round" Class="control-buttons" Icon="@IconType.Outline.Delete"></Button>
                 </Tooltip>
             </Popconfirm>
         </Col>
@@ -35,13 +41,13 @@
 
     <Row Class="input-item-row">
         <Col Span="24">
-            <AntDesign.Input Placeholder="タイトル" @bind-Value="Title" />
+        <AntDesign.Input Placeholder="タイトル" @bind-Value="Title" />
         </Col>
     </Row>
 
     <Row Class="input-item-row">
         <Col Span="24">
-            <AntDesign.TextArea Placeholder="内容" Rows="10" @bind-Value="Description" />
+        <AntDesign.TextArea Placeholder="内容" Rows="10" @bind-Value="Description" />
         </Col>
     </Row>
 
@@ -49,14 +55,14 @@
         <Col Span="24">
             @if (schedulingServive.SelectedDuty is BusinessDuty)
             {
-                <Select DataSource="@_codes"
-                        @bind-Value="@SelectedWorkCodeFamily"
-                        LabelName="@nameof(WorkCodeVM.Label)"
-                        ValueName="@nameof(WorkCodeVM.Value)"
-                        Placeholder="作業コードを選択してください"
-                        DefaultActiveFirstItem="false"
-                        EnableSearch>
-                </Select>
+            <Select DataSource="@_codes"
+                @bind-Value="@SelectedWorkCodeFamily"
+                LabelName="@nameof(WorkCodeVM.Label)"
+                ValueName="@nameof(WorkCodeVM.Value)"
+                Placeholder="作業コードを選択してください"
+                DefaultActiveFirstItem="false"
+                EnableSearch>
+            </Select>
             }
         </Col>
     </Row>
@@ -65,7 +71,7 @@
         <Col Span="24">
             @if (SelectedWorkCodeFamily != null)
             {
-                <p>@($"{SelectedWorkCodeFamily.Description}")</p>
+            <p>@($"{SelectedWorkCodeFamily.Description}")</p>
             }
         </Col>
     </Row>
@@ -116,7 +122,7 @@
         }
     }
 
-    string? Description 
+    string? Description
     {
         get => schedulingServive.SelectedDuty?.Description;
         set
@@ -225,18 +231,18 @@
 
     private void OnBackButtonClick()
     {
-        if(schedulingServive.SelectedDate == null)  return;
-        if(schedulingServive.SelectedDuty == null)  return;
+        if (schedulingServive.SelectedDate == null) return;
+        if (schedulingServive.SelectedDuty == null) return;
 
         TimeOnly start = schedulingServive.SelectedDuty.StartTime;
 
         // todo 重なっている場合
         var found = schedulingServive
             .FindDutiesByDate(schedulingServive.SelectedDate.Value)
-            .Where(d=>d.EndTime < start)
+            .Where(d => d.EndTime < start)
             .MinBy(d => (start - d.EndTime).TotalMinutes);
 
-        if(found == null)  return;
+        if (found == null) return;
 
         schedulingServive.SelectedDuty.StartTime = found.EndTime;
         schedulingServive.RaiseDutyPropertyChanged(this);
@@ -245,20 +251,34 @@
 
     private void OnForwordButtonClick()
     {
-        if(schedulingServive.SelectedDate == null)  return;
-        if(schedulingServive.SelectedDuty == null)  return;
+        if (schedulingServive.SelectedDate == null) return;
+        if (schedulingServive.SelectedDuty == null) return;
 
         TimeOnly end = schedulingServive.SelectedDuty.EndTime;
 
         // todo 重なっている場合
         var found = schedulingServive
             .FindDutiesByDate(schedulingServive.SelectedDate.Value)
-            .Where(d=>d.StartTime > end)
+            .Where(d => d.StartTime > end)
             .MinBy(d => (d.StartTime - end).TotalMinutes);
 
-        if(found == null)  return;
+        if (found == null) return;
 
         schedulingServive.SelectedDuty.EndTime = found.StartTime;
         schedulingServive.RaiseDutyPropertyChanged(this);
+    }
+
+    private void SendToDoList()
+    {
+        if (schedulingServive.SelectedDate == null) return;
+        if (schedulingServive.SelectedDuty == null) return;
+
+        var duty = schedulingServive.SelectedDuty;
+        var item = schedulingServive.CreateNewToDoItem(schedulingServive.SelectedDate.Value);
+        item.Description = duty.Title;
+        schedulingServive.DeleteDuty(duty.Id);
+        schedulingServive.ChangeSelectedDuty(null, this);
+
+        schedulingServive.UpdateToDoItem(item, this);
     }
 }

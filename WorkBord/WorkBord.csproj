@@ -9,5 +9,6 @@
   <ItemGroup>
     <Folder Include="WorkCodeFamilies\" />
     <Folder Include="Duties\" />
+    <Folder Include="ToDoTasks\" />
   </ItemGroup>
 </Project>

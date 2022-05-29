@@ -199,39 +199,17 @@
 
     private void AddNewSchedule()
     {
-        if (_dateTime.Value == null) return;
+        if (_dateTime == null) return;
 
-        // 9時以降で開いているところに入れる(12時は除く)
-
-        DateOnly targetDate = DateOnly.FromDateTime(_dateTime.Value);
-        TimeOnly start = new TimeOnly(9, 0);
-        TimeOnly end = start.AddMinutes(60);
-
-        // その日の中で最後に終わる業務
-        var lastEndTime = schedulingServive.FindDutiesByDate(targetDate).MaxBy(d=>d.EndTime)?.EndTime;
-        if (lastEndTime != null)
-        {
-            if (lastEndTime.Value.Hour != 12)
-            {
-                start = lastEndTime.Value;
-            }
-            else
-            {
-                start = new TimeOnly(13, 0);
-            }
-            end = start.AddMinutes(60);
-        }
-
-        var createdDuty = schedulingServive.CreateNewDuty(targetDate, start, end);
+        Duty created = schedulingServive.AddNewSchedule(DateOnly.FromDateTime(_dateTime.Value));
         ShowTimeBars(_dateTime.Value);
         StateHasChanged();
-
-        schedulingServive.ChangeSelectedDuty(createdDuty, new object());
+        schedulingServive.ChangeSelectedDuty(created, new object());
     }
 
     private void AppendNewSchedule(TimeOnly selectedTimeBlock)
     {
-        if (_dateTime.Value == null) return;
+        if (_dateTime == null) return;
 
         int defaultSpanMinute = 60;
 

@@ -3,6 +3,7 @@ using MyWorkDashboard.Shared.Components;
 using WorkBord;
 using WorkBord.WorkCodeFamilies;
 using WorkBord.Duties;
+using WorkBord.ToDoTasks;
 
 namespace MyWorkDashboard.Shared.Services;
 
@@ -13,10 +14,12 @@ public class SchedulingServive
     public event EventHandler DutyPropertyChanged;
     public event EventHandler DutyDeleted;
     public event EventHandler SelectedDateChanged;
+    public event EventHandler ToDoItemChanged;
 
     private readonly IDutyRepository _dutyRepository;
     private readonly IWorkCodeFamilyRepository _workCodeFamilyRepository;
     private readonly IDutyColorRepository _dutyColorRepository;
+    private readonly IToDoRepository _toDoRepository;
 
     private string DefaultWorkCodeId
     {
@@ -42,13 +45,15 @@ public class SchedulingServive
         _dutyRepository = new MockDutyRepository();
         _workCodeFamilyRepository = new MockWorkCodeFamilyRepository();
         _dutyColorRepository = new MockDutyColorRepository();
+        _toDoRepository = new MockToDoRepository();
     }
 
-    public SchedulingServive(IDutyRepository dutyRepository, IWorkCodeFamilyRepository workCodeFamilyRepository, IDutyColorRepository dutyColorRepository)
+    public SchedulingServive(IDutyRepository dutyRepository, IWorkCodeFamilyRepository workCodeFamilyRepository, IDutyColorRepository dutyColorRepository, IToDoRepository toDoRepository)
     {
         _dutyRepository = dutyRepository;
         _workCodeFamilyRepository = workCodeFamilyRepository;
         _dutyColorRepository = dutyColorRepository;
+        _toDoRepository = toDoRepository;
     }
 
     public WorkCodeFamily[] GetAllWorkCodeFamily()
@@ -101,6 +106,34 @@ public class SchedulingServive
     {
         _dutyRepository.Delete(id);
         DutyDeleted.Invoke(this, EventArgs.Empty);
+    }
+
+    public Duty AddNewSchedule(DateOnly date)
+    {
+
+        // 9時以降で開いているところに入れる(12時は除く)
+
+        DateOnly targetDate = date;
+        TimeOnly start = new TimeOnly(9, 0);
+        TimeOnly end = start.AddMinutes(60);
+
+        // その日の中で最後に終わる業務
+        var lastEndTime = this.FindDutiesByDate(targetDate).MaxBy(d => d.EndTime)?.EndTime;
+        if (lastEndTime != null)
+        {
+            if (lastEndTime.Value.Hour != 12)
+            {
+                start = lastEndTime.Value;
+            }
+            else
+            {
+                start = new TimeOnly(13, 0);
+            }
+            end = start.AddMinutes(60);
+        }
+
+        var createdDuty = this.CreateNewDuty(targetDate, start, end);
+        return createdDuty;
     }
 
     public DutyStaticticResult[]  TakeStatisticsOfSelectedDay()
@@ -173,4 +206,47 @@ public class SchedulingServive
             yield return lastRange;
         }
     }
+
+    #region ToDoリスト
+
+    public ToDoItem[] FindToDoItemsByDate(DateOnly date)
+    {
+        return _toDoRepository.FindByDate(date);
+    }
+
+    public ToDoItem CreateNewToDoItem(DateOnly date)
+    {
+        string id = _toDoRepository.GetNewId();
+        ToDoItem item = new ToDoItem(id, date, "");
+        _toDoRepository.Register(item);
+        return item;
+    }
+
+    public void DeleteToDoItem(string id)
+    {
+        _toDoRepository.Delete(id);
+    }
+
+    public void UpdateToDoItem(ToDoItem item, object? sender)
+    {
+        _toDoRepository.Register(item);
+        ToDoItemChanged?.Invoke(sender, EventArgs.Empty);
+    }
+
+    public int MoveTodayOlderTodoItems()
+    {
+        int count = 0;
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        foreach (ToDoItem item in _toDoRepository.FindItemsBeforeThan(today))
+        {
+            _toDoRepository.Delete(item.Id);
+            item.DueDate = today;
+            _toDoRepository.Register(item);
+            count++;
+        }
+
+        return count;
+    }
+
+    #endregion
 }
