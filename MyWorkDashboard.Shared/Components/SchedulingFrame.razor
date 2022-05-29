@@ -6,9 +6,11 @@
 <div style="height: 100%; width: 100%;" @oncontextmenu:stopPropagation @oncontextmenu:preventDefault>
     <Row Style="height: 5%;">
         <Col>
-            <DatePicker AllowClear="false" Size="@DatePickerSize.Large" TValue="DateTime?" Picker="@DatePickerType.Date" @bind-Value="_dateTime" OnChange="OnDateChanged" />
+            <Button Type="@ButtonType.Default" Icon="@IconType.Outline.Left" Shape="@ButtonShape.Circle" OnClick="GoYesterday"></Button>
+            <DatePicker AllowClear="false" Size="@DatePickerSize.Large" TValue="DateTime?" Picker="@DatePickerType.Date" @bind-Value="_dateTime" OnChange="OnDateChanged"/>
+            <Button Type="@ButtonType.Default" Icon="@IconType.Outline.Right" Shape="@ButtonShape.Circle" OnClick="GoTommorrow"></Button>
         </Col>
-        <Col Offset="1" Span="8">
+        <Col Offset="1">
             <Tooltip Placement="@Placement.Bottom" Title=@("新規タスク追加")>
                 <Button Type="@ButtonType.Primary" Icon="@IconType.Outline.Form" Shape="@ButtonShape.Round" OnClick="AddNewSchedule"></Button>
             </Tooltip>
@@ -176,6 +178,19 @@
         schedulingServive.ChangeSelectedDuty(null, this);
         schedulingServive.ChangeSelectedDate(DateOnly.FromDateTime(_dateTime.Value), this);
     }
+
+    private void GoYesterday()
+    {
+        _dateTime = _dateTime.Value.AddDays(-1);
+        OnDateChanged(new DateTimeChangedEventArgs(){Date = _dateTime.Value});
+    }
+
+    private void GoTommorrow()
+    {
+        _dateTime = _dateTime.Value.AddDays(1);
+        OnDateChanged(new DateTimeChangedEventArgs(){Date = _dateTime.Value});
+    }
+
 
     private void ShowTimeBars(DateTime datetime)
     {
