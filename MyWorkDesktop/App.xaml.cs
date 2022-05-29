@@ -36,7 +36,19 @@ namespace MyWorkDesktop
 
             serviceCollection.AddScoped(sp => new SchedulingServive(dataRepo, masterRepo, masterRepo, todoRepo));
 
+            serviceCollection.AddScoped(sp => new ControlService(new FocusManeger(this.Handle)));
+
             Resources.Add("services", serviceCollection.BuildServiceProvider());
+        }
+
+        // ウィンドウハンドルを取得
+        public IntPtr Handle
+        {
+            get
+            {
+                var helper = new System.Windows.Interop.WindowInteropHelper(this.MainWindow);
+                return helper.Handle;
+            }
         }
     }
 }

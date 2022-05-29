@@ -3,6 +3,7 @@
 
 @inject MessageService messageService
 @inject SchedulingServive schedulingServive
+@inject ControlService controlService
 
 <div class="task-frame" hidden="@_isEmpty">
 
@@ -41,13 +42,13 @@
 
     <Row Class="input-item-row">
         <Col Span="24">
-        <AntDesign.Input Placeholder="タイトル" @bind-Value="Title" />
+            <AntDesign.Input Placeholder="タイトル" @bind-Value="Title" OnFocus="() => { controlService.EnableImeMode();}"/>
         </Col>
     </Row>
 
     <Row Class="input-item-row">
         <Col Span="24">
-        <AntDesign.TextArea Placeholder="内容" Rows="10" @bind-Value="Description" />
+            <AntDesign.TextArea Placeholder="内容" Rows="10" @bind-Value="Description"  OnFocus="() => { controlService.EnableImeMode();}"/>
         </Col>
     </Row>
 
@@ -67,15 +68,6 @@
         </Col>
     </Row>
 
-    <Row Class="input-item-row">
-        <Col Span="24">
-            @if (SelectedWorkCodeFamily != null)
-            {
-            <p>@($"{SelectedWorkCodeFamily.Description}")</p>
-            }
-        </Col>
-    </Row>
-
 </div>
 
 <div hidden="@(!_isEmpty)">
@@ -84,6 +76,7 @@
             Title="タスクが選択されていません"
             SubTitle="左側のタイムラインでタスクを選択すると編集が可能になります。">
     </Result>
+    <Skeleton/>
 </div>
 
 <style>
@@ -93,7 +86,6 @@
     }
 
     .task-frame {
-        border: 1px black solid;
         height: 100%;
         padding: 10px;
     }
@@ -191,6 +183,12 @@
     {
         public string Label { get; set; }
         public WorkCodeFamily Value { get; set; }
+
+        public WorkCodeVM(WorkCodeFamily value)
+        {
+            Value = value;
+            Label = $"{value.Category.Id}:{value.Category.Name} {value.WorkCode.Name} ({value.WorkCode.Name})";
+        }
     }
 
     List<WorkCodeVM> _codes;
@@ -200,7 +198,7 @@
         _codes = new List<WorkCodeVM>();
         foreach (WorkCodeFamily family in schedulingServive.GetAllWorkCodeFamily())
         {
-            _codes.Add(new WorkCodeVM { Value = family, Label = family.ToString() });
+            _codes.Add(new WorkCodeVM(family));
         }
 
         schedulingServive.SelectedDutyChanged += OnSelectedDutyChanged;
