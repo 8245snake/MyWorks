@@ -8,6 +8,8 @@
   </PropertyGroup>
 	<PropertyGroup>
 		<GHPages>true</GHPages>
+		<FileVersion>0.0.1.2</FileVersion>
+		<AssemblyVersion>0.0.1.2</AssemblyVersion>
 	</PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AntDesign" Version="0.10.6" />
