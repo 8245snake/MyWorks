@@ -1,7 +1,7 @@
 ﻿using System.Data;
-using WorkBord.WorkCodeFamilies;
+using MyWorkDashboard.Shared.WorkCodeFamilies;
 
-namespace WorkBord.Duties;
+namespace MyWorkDashboard.Shared.Duties;
 
 public class DutiesOfDay
 {

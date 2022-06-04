@@ -1,4 +1,4 @@
-﻿namespace WorkBord.Duties;
+﻿namespace MyWorkDashboard.Shared.Duties;
 
 public abstract class Duty
 {

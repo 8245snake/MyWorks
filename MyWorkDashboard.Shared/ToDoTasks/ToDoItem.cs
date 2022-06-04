@@ -1,4 +1,4 @@
-﻿namespace WorkBord.ToDoTasks;
+﻿namespace MyWorkDashboard.Shared.ToDoTasks;
 
 public class ToDoItem
 {

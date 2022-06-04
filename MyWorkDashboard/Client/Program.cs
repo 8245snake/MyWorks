@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MyWorkDashboard.Client;
+using MyWorkDashboard.Shared.Mock;
 using MyWorkDashboard.Shared.Services;
-using WorkBord;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");

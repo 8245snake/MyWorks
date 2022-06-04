@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel;
 using MyWorkDashboard.Shared.Components;
-using WorkBord;
-using WorkBord.WorkCodeFamilies;
-using WorkBord.Duties;
-using WorkBord.ToDoTasks;
+using MyWorkDashboard.Shared.Duties;
+using MyWorkDashboard.Shared.Mock;
+using MyWorkDashboard.Shared.ToDoTasks;
+using MyWorkDashboard.Shared.WorkCodeFamilies;
 
 namespace MyWorkDashboard.Shared.Services;
 

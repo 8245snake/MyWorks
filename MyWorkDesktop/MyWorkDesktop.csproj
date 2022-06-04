@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MyWorkDashboard.Shared\MyWorkDashboard.Shared.csproj" />
-    <ProjectReference Include="..\WorkBord\WorkBord.csproj" />
   </ItemGroup>
 
   <ItemGroup>

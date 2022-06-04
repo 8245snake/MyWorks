@@ -1,6 +1,6 @@
-﻿using WorkBord.Duties;
+﻿using MyWorkDashboard.Shared.Duties;
 
-namespace WorkBord;
+namespace MyWorkDashboard.Shared.Mock;
 
 public class MockDutyRepository : IDutyRepository
 {

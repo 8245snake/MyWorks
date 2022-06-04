@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
 using MyWorkDashboard.Shared.Services;
 using MyWorkDesktop.Services;
-using WorkBord;
 
 
 namespace MyWorkDesktop

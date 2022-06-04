@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using WorkBord;
-using WorkBord.WorkCodeFamilies;
 using System.IO;
 using System.Text;
+using MyWorkDashboard.Shared;
 using MyWorkDashboard.Shared.Services;
+using MyWorkDashboard.Shared.WorkCodeFamilies;
 
 namespace MyWorkDesktop.Services;
 

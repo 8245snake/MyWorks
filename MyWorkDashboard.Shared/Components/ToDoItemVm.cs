@@ -1,6 +1,6 @@
-﻿using MyWorkDashboard.Shared.Services;
-using WorkBord.Duties;
-using WorkBord.ToDoTasks;
+﻿using MyWorkDashboard.Shared.Duties;
+using MyWorkDashboard.Shared.Services;
+using MyWorkDashboard.Shared.ToDoTasks;
 
 namespace MyWorkDashboard.Shared.Components;
 

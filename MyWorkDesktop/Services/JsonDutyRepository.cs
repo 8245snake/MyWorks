@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using MyWorkDashboard.Shared;
+using MyWorkDashboard.Shared.Duties;
 using Newtonsoft.Json;
-using WorkBord;
-using WorkBord.Duties;
 
 namespace MyWorkDesktop.Services;
 

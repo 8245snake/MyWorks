@@ -5,8 +5,6 @@ VisualStudioVersion = 17.1.32407.343
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DraftConsole", "DraftConsole\DraftConsole.csproj", "{BC6929F0-6AE6-459D-8216-73734AFF12D2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WorkBord", "WorkBord\WorkBord.csproj", "{EA9B2125-4878-4485-9B7B-834EA897DB71}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyWorkDashboard.Client", "MyWorkDashboard\Client\MyWorkDashboard.Client.csproj", "{9E9A5069-9696-4FA1-81B4-84652825165B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyWorkDashboard.Shared", "MyWorkDashboard.Shared\MyWorkDashboard.Shared.csproj", "{7DDF81DE-FC3B-4E15-9DF8-A523CAB018B3}"
@@ -25,10 +23,6 @@ Global
 		{BC6929F0-6AE6-459D-8216-73734AFF12D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BC6929F0-6AE6-459D-8216-73734AFF12D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BC6929F0-6AE6-459D-8216-73734AFF12D2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EA9B2125-4878-4485-9B7B-834EA897DB71}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EA9B2125-4878-4485-9B7B-834EA897DB71}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EA9B2125-4878-4485-9B7B-834EA897DB71}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EA9B2125-4878-4485-9B7B-834EA897DB71}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9E9A5069-9696-4FA1-81B4-84652825165B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9E9A5069-9696-4FA1-81B4-84652825165B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9E9A5069-9696-4FA1-81B4-84652825165B}.Release|Any CPU.ActiveCfg = Release|Any CPU

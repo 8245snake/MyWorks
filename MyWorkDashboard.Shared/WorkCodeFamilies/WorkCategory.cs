@@ -1,4 +1,4 @@
-﻿namespace WorkBord.WorkCodeFamilies;
+﻿namespace MyWorkDashboard.Shared.WorkCodeFamilies;
 
 public class WorkCategory
 {

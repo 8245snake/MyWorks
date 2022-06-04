@@ -18,8 +18,4 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="6.0.5" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\WorkBord\WorkBord.csproj" />
-  </ItemGroup>
-
 </Project>

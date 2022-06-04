@@ -1,6 +1,6 @@
-﻿using WorkBord.WorkCodeFamilies;
+﻿using MyWorkDashboard.Shared.WorkCodeFamilies;
 
-namespace WorkBord;
+namespace MyWorkDashboard.Shared.Mock;
 
 /// <summary>
 /// ローカルテスト用リポジトリ

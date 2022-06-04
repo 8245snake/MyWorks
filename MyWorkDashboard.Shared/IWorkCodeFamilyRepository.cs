@@ -1,6 +1,6 @@
-﻿using WorkBord.WorkCodeFamilies;
+﻿using MyWorkDashboard.Shared.WorkCodeFamilies;
 
-namespace WorkBord;
+namespace MyWorkDashboard.Shared;
 
 /// <summary>
 /// 作業コードのリポジトリ抽象

@@ -1,6 +1,6 @@
-﻿using WorkBord.ToDoTasks;
+﻿using MyWorkDashboard.Shared.ToDoTasks;
 
-namespace WorkBord;
+namespace MyWorkDashboard.Shared;
 
 public interface IToDoRepository
 {
