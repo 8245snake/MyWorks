@@ -16,6 +16,7 @@ public class JsonToDoItemRepository : IToDoRepository
     public JsonToDoItemRepository(string dataDirectory)
     {
         DataDirectory = dataDirectory;
+        if (!Directory.Exists(dataDirectory)) Directory.CreateDirectory(dataDirectory);
         _settings = new JsonSerializerSettings();
         _settings.Converters.Add(new DateOnlyJsonConverter());
         _settings.Converters.Add(new TimeOnlyJsonConverter());
