@@ -14,6 +14,8 @@ builder.Services.AddScoped(sp => new SchedulingServive(
     new MockDutyColorRepository(),
     new MockToDoRepository()));
 builder.Services.AddScoped(sp => new ControlService(null));
+builder.Services.AddSingleton<PageNavigatingService>();
+
 builder.Services.AddAntDesign();
 
 await builder.Build().RunAsync();

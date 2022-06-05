@@ -1,6 +1,7 @@
 ﻿@using MyWorkDashboard.Shared.Services
 @using System.ComponentModel
 @using MyWorkDashboard.Shared.Duties
+@implements IDisposable
 
 @inject SchedulingServive schedulingServive
 
@@ -219,5 +220,13 @@
         schedulingServive.ChangeSelectedDuty(createdDuty, new object());
     }
 
+    public void Dispose()
+    {
+        schedulingServive.SelectedDutyChanged -= OnSelectedDutyChanged;
+        schedulingServive.DutyPropertyChanged -= OnPropertyChanged;
+        schedulingServive.SelectedDateChanged -= OnSelectedDateChanged;
+        _duties.ItemSelected -= DutiesOnItemSelected;
+        _duties.Clear();
+    }
 
 }

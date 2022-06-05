@@ -2,6 +2,8 @@
 @using System.ComponentModel
 @using MyWorkDashboard.Shared.Duties
 
+@implements IDisposable
+
 @inject SchedulingServive schedulingServive
 
 <Row Style="height: 100%; width: 100%;">
@@ -112,5 +114,12 @@
             _duties.Add(new DutyBar(duty, 60, colorCode) { IsSelected = isSelected });
         }
     }
+
+    public void Dispose()
+    {
+        schedulingServive.SelectedDutyChanged -= OnSelectedDutyChanged;
+        schedulingServive.DutyPropertyChanged -= OnPropertyChanged;
+        schedulingServive.SelectedDateChanged -= OnSelectedDateChanged;
+        _duties.ItemSelected -= DutiesOnItemSelected;    }
 
 }

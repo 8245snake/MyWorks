@@ -3,6 +3,8 @@
 @using MyWorkDashboard.Shared.Duties
 @using MyWorkDashboard.Shared.WorkCodeFamilies
 
+@implements IDisposable
+
 @inject MessageService messageService
 @inject SchedulingServive schedulingServive
 @inject ControlService controlService
@@ -280,5 +282,11 @@
         schedulingServive.ChangeSelectedDuty(null, this);
 
         schedulingServive.UpdateToDoItem(item, this);
+    }
+
+    public void Dispose()
+    {
+        schedulingServive.SelectedDutyChanged -= OnSelectedDutyChanged;
+        schedulingServive.DutyPropertyChanged -= OnPropertyChanged;
     }
 }

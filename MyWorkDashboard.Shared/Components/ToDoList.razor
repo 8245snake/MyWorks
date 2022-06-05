@@ -2,6 +2,8 @@
 @using MyWorkDashboard.Shared.Services
 @using MyWorkDashboard.Shared.ToDoTasks
 
+@implements IDisposable
+
 @inject SchedulingServive schedulingServive
 @inject NotificationService notificationService
 
@@ -105,5 +107,9 @@ else
         return  new ToDoItemVm(item, _todoItems, schedulingServive);
     }
 
+    public void Dispose()
+    {
+        schedulingServive.SelectedDateChanged -= OnSelectedDateChanged;
+        schedulingServive.ToDoItemChanged -= OnToDoItemChanged;    }
 
 }

@@ -1,0 +1,82 @@
+﻿
+
+<div>
+    <Row>
+        <Col Xs="24" Sm="24" Md="12" Lg="8" Xl="6" Style="padding: 10px;">
+        <Tabs @bind-ActiveKey="@activeKey" Type="@TabType.Card" Animated>
+            <TabPane Key="1">
+                <TabTemplate>
+                    <span><Icon Type="calendar" Theme="outline" />タイムライン</span>
+                </TabTemplate>
+                <ChildContent>
+                    <div class="schedule-container">
+                            @*タイムライン*@
+                        <SchedulingFrame />
+                    </div>
+                </ChildContent>
+            </TabPane>
+            <TabPane Key="2">
+                <TabTemplate>
+                    <span><Icon Type="unordered-list" Theme="outline" />リスト</span>
+                </TabTemplate>
+                <ChildContent>
+                    <div class="schedule-container">
+                            @*リスト*@
+                        <TaskListPanel />
+                    </div>
+                </ChildContent>
+            </TabPane>
+        </Tabs>
+        </Col>
+        <Col Xs="24" Sm="24" Md="12" Lg="16" Xl="18">
+        <Row Class="input-container">
+            <Col Span="24">
+                    @*詳細入力エリア*@
+            <TaskInputForm />
+            </Col>
+        </Row>
+        <Collapse DefaultActiveKey="@(new[]{"1"})">
+            <Panel Header="ToDo" Key="1">
+                    @*ToDoリスト*@
+                <ToDoList />
+            </Panel>
+            <Panel Header="集計" Key="2">
+                <Row Class="statistic-container">
+                    <Col Span="24">
+                            @*統計エリア*@
+                    <StatisticFrame />
+                    </Col>
+                </Row>
+            </Panel>
+        </Collapse>
+        </Col>
+    </Row>
+</div>
+
+
+<style>
+
+
+    .schedule-container {
+        height: calc(100vh - 130px);
+        /*padding: 20px;*/
+        margin: 0px;
+    }
+
+    .input-container {
+        padding: 10px;
+        margin: 0px;
+    }
+
+    .statistic-container {
+        padding: 20px;
+        margin: 0px;
+    }
+
+</style>
+
+
+@code {
+    string activeKey { get; set; } = "1";
+
+}

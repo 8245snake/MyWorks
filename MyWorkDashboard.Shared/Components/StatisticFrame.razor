@@ -3,6 +3,8 @@
 @using AntDesign.TableModels
 @using MyWorkDashboard.Shared.Duties
 
+@implements IDisposable
+
 @inject SchedulingServive schedulingServive
 @inject MessageService messageService
 
@@ -85,7 +87,7 @@
 
         schedulingServive.DutyPropertyChanged += RetakeStatistics;
         schedulingServive.SelectedDateChanged += RetakeStatistics;
-        schedulingServive.DutyDeleted += RetakeStatistics; ;
+        schedulingServive.DutyDeleted += RetakeStatistics;
 
 
         ChangeTargetDate(schedulingServive.SelectedDate);
@@ -163,5 +165,11 @@
         Console.WriteLine($"row {row.Data.Category} was clicked.");
     }
 
+    public void Dispose()
+    {
+        schedulingServive.DutyPropertyChanged -= RetakeStatistics;
+        schedulingServive.SelectedDateChanged -= RetakeStatistics;
+        schedulingServive.DutyDeleted -= RetakeStatistics;
+    }
 
 }

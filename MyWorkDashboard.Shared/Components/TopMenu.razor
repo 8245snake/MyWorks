@@ -1,25 +1,58 @@
 ﻿@using MyWorkDashboard.Shared.Services
 
 @inject SchedulingServive schedulingServive
+@inject PageNavigatingService navigatingService
 
 
-<Menu Theme="MenuTheme.Dark" Mode="MenuMode.Horizontal">
-    <Row Justify="space-between">
-        <Col>
-            <Button Type="@ButtonType.Default" Icon="@IconType.Outline.Left" Shape="@ButtonShape.Circle" OnClick="GoYesterday"></Button>
-            <DatePicker @ref="_datePicker" AllowClear="false" Size="@DatePickerSize.Large" TValue="DateTime?" Picker="@DatePickerType.Date" @bind-Value="_dateTime" OnChange="OnDateChanged"/>
-            <Button Type="@ButtonType.Default" Icon="@IconType.Outline.Right" Shape="@ButtonShape.Circle" OnClick="GoTommorrow"></Button>
+<AntDesign.Menu Theme="MenuTheme.Dark" Mode="MenuMode.Horizontal">
+    <AntDesign.Row Justify="space-between">
+        <AntDesign.Col>
+            @if (navigatingService.CurrentPage == PageType.Home)
+            {
+                <Button Type="@ButtonType.Default" Icon="@IconType.Outline.Left" Shape="@ButtonShape.Circle" OnClick="GoYesterday"></Button>
+                <DatePicker @ref="_datePicker" AllowClear="false" Size="@DatePickerSize.Large" TValue="DateTime?" Picker="@DatePickerType.Date" @bind-Value="_dateTime" OnChange="OnDateChanged"/>
+                <Button Type="@ButtonType.Default" Icon="@IconType.Outline.Right" Shape="@ButtonShape.Circle" OnClick="GoTommorrow"></Button>
 
-            <Tooltip Placement="@Placement.Bottom" Title=@("新規タスク追加")>
-                <Button Type="@ButtonType.Primary" Icon="@IconType.Outline.Form" Shape="@ButtonShape.Round" OnClick="AddNewSchedule" Style="margin-left: 10px"></Button>
-            </Tooltip>
-        </Col>
+                <Tooltip Placement="@Placement.Bottom" Title=@("新規タスク追加")>
+                    <Button Type="@ButtonType.Primary" Icon="@IconType.Outline.Form" Shape="@ButtonShape.Round" OnClick="AddNewSchedule" Style="margin-left: 10px"></Button>
+                </Tooltip>
+            }
+            else
+            {
+                <Button Type="@ButtonType.Default" Icon="@IconType.Outline.Left" Shape="@ButtonShape.Round" OnClick="GoHome">Home</Button>
+            }
 
-        <Col>
+        </AntDesign.Col>
+
+        <AntDesign.Col>
             @*ここにメニューボタンとかを出す*@
-        </Col>
-    </Row>
-</Menu>
+            <Row Justify="space-around" Gutter="16">
+                <Col>
+                    @if (navigatingService.CurrentPage == PageType.Preference)
+                    {
+                        <div class="top-navbar" style="background-color: #87cefa; color: black;">プリファレンス</div>
+                    }
+                    else
+                    {
+                        <div  class="top-navbar" @onclick="GoPreference">プリファレンス</div>
+                    }
+                    
+                </Col>
+                @*                <Col>
+                    <div style="height: 100%; width: 100px; cursor: pointer;">設定</div>
+                </Col>*@
+            </Row>
+        </AntDesign.Col>
+    </AntDesign.Row>
+</AntDesign.Menu>
+
+<style>
+    .top-navbar {
+        height: 100%;
+        width: 100px;
+        cursor: pointer;
+    }
+</style>
 
 @code {
     private DateTime? _dateTime;
@@ -30,6 +63,14 @@
         _dateTime = DateTime.Now;
         var today = DateOnly.FromDateTime(DateTime.Now);
         schedulingServive.ChangeSelectedDate(today, this);
+
+        navigatingService.Navigated += OnNavigated;
+    }
+
+    private void OnNavigated(object? sender, EventArgs e)
+    {
+        if(sender == this) return;
+
     }
 
     private void GoYesterday()
@@ -63,4 +104,15 @@
         schedulingServive.ChangeSelectedDate(DateOnly.FromDateTime(datetime), this);
         StateHasChanged();
     }
+
+    private void GoPreference()
+    {
+        navigatingService.Navigate(PageType.Preference, this);
+    }
+
+    private void GoHome()
+    {
+        navigatingService.Navigate(PageType.Home, this);
+    }
+
 }

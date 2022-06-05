@@ -1,0 +1,41 @@
+﻿@using MyWorkDashboard.Shared.Services
+
+
+@inject SchedulingServive schedulingServive
+
+<Layout Style="padding: 24px 0;">
+    <Sider Width="200">
+        <Menu Mode="MenuMode.Inline"
+              DefaultSelectedKeys=@(new[] {"1"})
+              Style="height: 100%;" @bind-SelectedKeys="_selectedKeys">
+            <MenuItem Key="1">作業コード</MenuItem>
+        </Menu>
+    </Sider>
+    <Content Style="height: 80vh;overflow-y: scroll;">
+        
+        <Empty Description="@("ここでコードの編集をできるようにする予定です。")"></Empty>
+        @if (_workCodes.Count > 0)
+        {
+            @foreach (var item in _workCodes)
+            {
+                <WorkCodeItem Model="item"/>
+            }
+        }
+
+    </Content>
+</Layout>
+
+@code {
+
+    string[] _selectedKeys = {};
+
+    private List<WorkCodeItemVM> _workCodes = new List<WorkCodeItemVM>();
+
+    protected override void OnInitialized()
+    {
+        _workCodes.Clear();
+        _workCodes.AddRange(schedulingServive.GetAllWorkCodeFamily().Select(f => new WorkCodeItemVM(f)));
+        StateHasChanged();
+    }
+
+}
