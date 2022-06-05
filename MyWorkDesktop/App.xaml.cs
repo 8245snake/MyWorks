@@ -36,6 +36,7 @@ namespace MyWorkDesktop
             serviceCollection.AddScoped(sp => new SchedulingServive(dataRepo, masterRepo, masterRepo, todoRepo));
 
             serviceCollection.AddScoped(sp => new ControlService(new FocusManeger(this.Handle)));
+            serviceCollection.AddSingleton<PageNavigatingService>();
 
             Resources.Add("services", serviceCollection.BuildServiceProvider());
         }
