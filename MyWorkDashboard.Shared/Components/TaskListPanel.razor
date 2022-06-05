@@ -1,0 +1,116 @@
+﻿@using MyWorkDashboard.Shared.Services
+@using System.ComponentModel
+@using MyWorkDashboard.Shared.Duties
+
+@inject SchedulingServive schedulingServive
+
+<Row Style="height: 100%; width: 100%;">
+    
+    @if (_duties.Bars.Count > 0)
+    {
+        
+        <div style="overflow-y: scroll; height: 100%; width: 100%;">
+
+            @foreach (var bar in _duties.Bars.OrderBy(b => b.Duty.StartTime))
+            {
+                <TaskListBar Duty="bar.Duty" ColorCode="@bar.ColorCode" OnSelected="@bar.OnClick" Selected="@bar.IsSelected"/>
+            }
+        </div>
+    }
+    else
+    {
+        <div>
+            <Empty Description="@("タスクがありません")"/>
+        </div>
+    }
+
+</Row>
+
+
+
+@code {
+
+    DateOnly? _dateTime => schedulingServive.SelectedDate;
+    private readonly DutyBarCollection _duties = new DutyBarCollection();
+
+    protected override void OnInitialized()
+    {
+
+        schedulingServive.SelectedDutyChanged += OnSelectedDutyChanged;
+        schedulingServive.DutyPropertyChanged += OnPropertyChanged;
+        schedulingServive.SelectedDateChanged += OnSelectedDateChanged;
+        _duties.ItemSelected += DutiesOnItemSelected;
+
+        ShowTimeBars(_dateTime.Value);
+        StateHasChanged();
+    }
+
+
+    private void OnSelectedDateChanged(object? sender, EventArgs e)
+    {
+        if(sender == this) return;
+        ShowTimeBars(_dateTime.Value);
+        StateHasChanged();
+    }
+
+    private void OnSelectedDutyChanged(object? sender, EventArgs e)
+    {
+        if(sender == this) return;
+
+        if (schedulingServive.SelectedDuty != null)
+        {
+            foreach (var bar in _duties.Bars)
+            {
+                bar.IsSelected = false;
+                if (schedulingServive.SelectedDuty.Id == bar.Duty.Id)
+                {
+                    bar.IsSelected = true;
+                }
+            }
+        }
+
+        ShowTimeBars(_dateTime.Value);
+        StateHasChanged();
+    }
+
+    private void OnPropertyChanged(object? sender, EventArgs e)
+    {
+        if(sender == this) return;
+        ShowTimeBars(_dateTime.Value);
+        StateHasChanged();
+    }
+
+    private void DutiesOnItemSelected(object? sender, DutySelectedEventArgs e)
+    {
+        schedulingServive.ChangeSelectedDuty(e.SelectedDuty, this);
+        foreach (var bar in _duties.Bars)
+        {
+            bar.IsSelected = false;
+            if (e.SelectedDuty == bar.Duty)
+            {
+                bar.IsSelected = true;
+            }
+        }
+        StateHasChanged();
+    }
+
+
+    private void ShowTimeBars(DateOnly date)
+    {
+        // 選択中のIDを覚えておく
+        var selectedId = schedulingServive.SelectedDuty?.Id;
+
+        _duties.Clear();
+        foreach (Duty duty in schedulingServive.FindDutiesByDate(date))
+        {
+            bool isSelected = false;
+            if (!string.IsNullOrWhiteSpace(selectedId))
+            {
+                isSelected = ( duty.Id == selectedId);
+            }
+            string colorCode = schedulingServive.GetWorkCodeFamilyColorCode(duty.Id);
+            _duties.Add(new DutyBar(duty, 60, colorCode) { IsSelected = isSelected });
+        }
+    }
+
+}

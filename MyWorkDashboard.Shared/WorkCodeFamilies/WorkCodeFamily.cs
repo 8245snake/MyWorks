@@ -4,7 +4,7 @@ public class WorkCodeFamily
 {
     public string Id { get; }
 
-    public string Description => $"{Category.Name} > {WorkCode.Id}({WorkCode.Name})";
+    public string Description => $"{Category.Name}  {WorkCode.Id}：{WorkCode.Name}";
 
     public WorkCategory Category { get; }
     public WorkCode WorkCode { get; }
