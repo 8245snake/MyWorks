@@ -12,4 +12,5 @@ public interface IWorkCodeFamilyRepository
     void Delete(string familyId);
     WorkCodeFamily? FindById(string familyId);
     WorkCodeFamily[] GetAll();
+    void SaveAll(IEnumerable<WorkCodeFamily> families);
 }

@@ -1,0 +1,164 @@
+﻿@typeparam TItem
+
+@using System.ComponentModel.DataAnnotations
+@implements IAsyncDisposable
+
+<div style="position: relative;">
+    
+    @foreach (var model in Models)
+    {
+        <div style="@model.Style" @onclick="model.Click">
+            @ItemTemplate(model.Item)
+        </div>
+    }
+
+</div>
+
+
+
+
+@code {
+
+    [Parameter, Required]
+    public RenderFragment<TItem> ItemTemplate { get; set; }
+
+    [Parameter, Required]
+    public IReadOnlyList<TItem> Items { get; set; }
+
+    [Parameter]
+    public string SelectedStyle { get; set; }
+
+    public TItem[] SortedItems => Models.Select(m => m.Item).ToArray();
+
+    private List<PanelModel> Models = new List<PanelModel>();
+
+    protected override void OnInitialized()
+    {
+        Rebuild(Items);
+    }
+
+
+    private void ModelOnSelected(object? sender, EventArgs e)
+    {
+        foreach (PanelModel model in Models)
+        {
+            model.IsSelected = model == sender;
+        }
+        StateHasChanged();
+    }
+
+
+    public void GoTop()
+    {
+        PanelModel selected = Models.FirstOrDefault(m => m.IsSelected);
+        if (selected == null) return;
+        Models.Remove(selected);
+        Models.Insert(0, selected);
+
+        StateHasChanged();
+    }
+
+    public void GoBottom()
+    {
+        PanelModel selected = Models.FirstOrDefault(m => m.IsSelected);
+        if (selected == null) return;
+        Models.Remove(selected);
+        Models.Add(selected);
+
+        StateHasChanged();
+    }
+
+    public void Up()
+    {
+        PanelModel selected = Models.FirstOrDefault(m => m.IsSelected);
+        if (selected == null) return;
+
+        var selectedIndex = Models.IndexOf(selected);
+        if (selectedIndex == 0) return;
+
+        Models.Remove(selected);
+        Models.Insert(selectedIndex - 1, selected);
+
+        StateHasChanged();
+    }
+
+    public void Down()
+    {
+        PanelModel selected = Models.FirstOrDefault(m => m.IsSelected);
+        if (selected == null) return;
+
+        var selectedIndex = Models.IndexOf(selected);
+        if (selectedIndex == Models.Count - 1) return;
+
+        Models.Remove(selected);
+        Models.Insert(selectedIndex + 1, selected);
+
+        StateHasChanged();
+    }
+
+    public void Rebuild( IReadOnlyList<TItem> items)
+    {
+        Models.Clear();
+        foreach (TItem item in items)
+        {
+            Models.Add(new PanelModel(item, SelectedStyle));
+        }
+
+        foreach (PanelModel model in Models)
+        {
+            model.Selected -= ModelOnSelected;
+            model.Selected += ModelOnSelected;
+        }
+
+        StateHasChanged();
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        foreach (PanelModel model in Models)
+        {
+            model.Selected -= ModelOnSelected;
+        }
+        Models.Clear();
+
+        return ValueTask.CompletedTask;
+    }
+
+    public class PanelModel
+    {
+
+        public bool IsSelected { get; set; }
+        public string SelectedStyle { get; set; }
+        public TItem Item { get; set; }
+
+        public Action Click => () =>
+        {
+            IsSelected = true;
+            Selected?.Invoke(this, EventArgs.Empty);
+        };
+
+        public event EventHandler? Selected;
+
+        public string Style
+        {
+            get
+            {
+                string selected = "background-color: aquamarine;";
+                if (!string.IsNullOrWhiteSpace(SelectedStyle))
+                {
+                    selected = SelectedStyle;
+                }
+                return IsSelected ? selected : "";
+            }
+        }
+
+        public PanelModel(TItem item, string selectedStyle)
+        {
+            this.Item = item;
+            this.IsSelected = false;
+            this.SelectedStyle = selectedStyle;
+        }
+
+
+    }
+}

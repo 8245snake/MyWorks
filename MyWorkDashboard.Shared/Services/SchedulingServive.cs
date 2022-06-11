@@ -61,7 +61,7 @@ public class SchedulingServive
         return _workCodeFamilyRepository.GetAll();
     }
 
-    public string GetWorkCodeFamilyColorCode(string dutyId)
+    public string GetDutyColorCode(string dutyId)
     {
         var duty = _dutyRepository.FindById(dutyId) as BusinessDuty;
         if (duty == null)
@@ -69,6 +69,11 @@ public class SchedulingServive
             return "#cccccc";
         }
         return _dutyColorRepository.GetHtmlColorCodeById(duty.WorkCodeFamilyId);
+    }
+
+    public string GetWorkCodeFamilyColorCode(string famulyId)
+    {
+        return _dutyColorRepository.GetHtmlColorCodeById(famulyId);
     }
 
     public void ChangeSelectedDuty(Duty duty, object sender)
@@ -249,4 +254,19 @@ public class SchedulingServive
     }
 
     #endregion
+
+    public void SaveAll(IEnumerable<WorkCodeFamily> items)
+    {
+        _workCodeFamilyRepository.SaveAll(items);
+    }
+
+    public void RegisterColor(string id, string colorCode)
+    {
+        _dutyColorRepository.Register(id, colorCode);
+    }
+
+    public string AddNewWorkCodeId()
+    {
+        return _workCodeFamilyRepository.GetNewId();
+    }
 }

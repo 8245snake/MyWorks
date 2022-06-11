@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyWorkDesktop", "MyWorkDesk
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyWorkDashboard.SharedTests", "MyWorkDashboard.SharedTests\MyWorkDashboard.SharedTests.csproj", "{763A91F6-8251-40DD-AFF3-E6BA6E339830}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevSamples", "DevSamples\DevSamples.csproj", "{0A791F9B-3AAB-428A-8B6C-2ECAB1FE05F1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DevSamples", "DevSamples\DevSamples.csproj", "{0A791F9B-3AAB-428A-8B6C-2ECAB1FE05F1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
