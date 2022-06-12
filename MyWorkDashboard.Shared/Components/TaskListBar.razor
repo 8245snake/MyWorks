@@ -9,8 +9,8 @@
     <div class="task-color-label" style=@($"background-color: {ColorCode};")></div>
     <div class="task-color-content">
         <div class="bar-top">
-            <p class="bar-titile">@(Duty.StartTime)～@(Duty.EndTime) (@(_timeSpanText))</p>
-            <p style="font-size: 10px;">@_workCodetext</p>
+            <p style="max-width: 40%; white-space: nowrap" class="bar-titile">@(Duty.StartTime)～@(Duty.EndTime) (@(_timeSpanText))</p>
+            <p style="font-size: 10px; max-width: 60%; white-space: nowrap">@_workCodetext</p>
         </div>
         
         <p class="bar-titile">@Duty.Title</p>
