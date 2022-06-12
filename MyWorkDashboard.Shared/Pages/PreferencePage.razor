@@ -11,15 +11,10 @@
             <MenuItem Key="1">作業コード</MenuItem>
         </Menu>
     </Sider>
-    <Content Style="height: 80vh;overflow-y: scroll;">
-        
-        <Empty Description="@("ここでコードの編集をできるようにする予定です。")"></Empty>
-        @if (_workCodes.Count > 0)
+    <Content Style="height: 87vh;overflow-y: scroll;">
+        @if (_selectedKeys.Contains("1"))
         {
-            @foreach (var item in _workCodes)
-            {
-                <WorkCodeItem Model="item"/>
-            }
+            <WorkCodeMaintenance/>
         }
 
     </Content>
@@ -27,15 +22,6 @@
 
 @code {
 
-    string[] _selectedKeys = {};
-
-    private List<WorkCodeItemVM> _workCodes = new List<WorkCodeItemVM>();
-
-    protected override void OnInitialized()
-    {
-        _workCodes.Clear();
-        _workCodes.AddRange(schedulingServive.GetAllWorkCodeFamily().Select(f => new WorkCodeItemVM(f)));
-        StateHasChanged();
-    }
+    string[] _selectedKeys = {"1"};
 
 }

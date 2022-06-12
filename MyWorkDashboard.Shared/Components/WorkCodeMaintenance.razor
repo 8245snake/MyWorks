@@ -1,0 +1,135 @@
+﻿@using MyWorkDashboard.Shared.Services
+@using MyWorkDashboard.Shared.WorkCodeFamilies
+
+@inject SchedulingServive schedulingServive
+
+<Row>
+    <Col Span="22">
+        <SortableContainer Items="_workCodes" SelectedStyle="background-color: khaki;" @ref="_container">
+            <ItemTemplate>
+                <div style="padding: 5px; border: 1px black solid;">
+                    <Row>
+                        <Col>
+                            <div style=@($"background-color: {context.ColorCode}; height: 50px; width: 50px;")></div>
+                        </Col>
+                        <Col Span="3">
+                            色
+                            <Input @bind-Value="@context.ColorCode"/>
+                        </Col>
+                        <Col Span="4">
+                            コード
+                            <Input @bind-Value="@context.CategoryCode"/>
+                        </Col>
+                        <Col Span="7">
+                            カテゴリ
+                            <Input @bind-Value="@context.CategoryName"/>
+                        </Col>
+                        <Col Span="2">
+                            作業コード
+                            <Input @bind-Value="@context.WorkCode"/>
+                        </Col>
+                        <Col Span="7">
+                            作業名
+                            <Input @bind-Value="@context.WorkName"/>
+                        </Col>
+                    </Row>
+                </div>
+            </ItemTemplate>
+        </SortableContainer>
+    </Col>
+    <Col Span="2">
+        <Affix OffsetTop="100">
+            <div>
+                <Button OnClick="CreateNew" Shape="@ButtonShape.Round" Icon="@IconType.Outline.Plus" Block>新規</Button>
+                <Button OnClick="GoUp" Shape="@ButtonShape.Round" Icon="@IconType.Outline.Up" Block>上へ</Button>
+                <Button OnClick="GoDown" Shape="@ButtonShape.Round" Icon="@IconType.Outline.Down" Block>下へ</Button>
+                <Button OnClick="GoTop" Shape="@ButtonShape.Round" Icon="@IconType.Outline.VerticalAlignTop" Block>先頭</Button>
+                <Button OnClick="GoBottom" Shape="@ButtonShape.Round" Icon="@IconType.Outline.VerticalAlignBottom" Block>末尾</Button>
+                <Button Type="@ButtonType.Primary" OnClick="Save" Shape="@ButtonShape.Round" Icon="@IconType.Outline.Save" Block Disabled="@(!_propertyChanged)">保存</Button>
+            </div>
+        </Affix>
+
+    </Col>
+</Row>
+
+
+
+@code {
+
+    private SortableContainer<WorkCodeItemVM> _container;
+    
+    private WorkCodeItemVM[] _workCodes = { };
+
+    private bool _propertyChanged = false;
+
+    public bool PropertyChanged => _propertyChanged;
+
+
+    protected override void OnInitialized()
+    {
+        _workCodes = schedulingServive.GetAllWorkCodeFamily().Select((f, index) => new WorkCodeItemVM(f, schedulingServive)).ToArray();
+        foreach (WorkCodeItemVM item in _workCodes)
+        {
+            item.PropertyChanged += ItemOnPropertyChanged;
+        }
+        StateHasChanged();
+    }
+
+    private void ItemOnPropertyChanged(object? sender, EventArgs e)
+    {
+        foreach (WorkCodeItemVM item in _workCodes)
+        {
+            item.PropertyChanged -= ItemOnPropertyChanged;
+        }
+        _propertyChanged = true;
+        StateHasChanged();
+    }
+
+    private void GoUp()
+    {
+        _container.Up();
+        _propertyChanged = true;
+    }
+
+    private void GoDown()
+    {
+        _container.Down();
+        _propertyChanged = true;
+    }
+
+    private void GoTop()
+    {
+        _container.GoTop();
+        _propertyChanged = true;
+    }
+
+    private void GoBottom()
+    {
+        _container.GoBottom();
+        _propertyChanged = true;
+    }
+
+    private void CreateNew()
+    {
+        string id = schedulingServive.AddNewWorkCodeId();
+        WorkCodeFamily code = new WorkCodeFamily(id, new WorkCategory("", ""), new WorkCode("", ""));
+        var list = _workCodes.ToList();
+        list.Add(new WorkCodeItemVM(code, schedulingServive));
+        _workCodes = list.ToArray();
+        _container.Rebuild(_workCodes);
+
+        _propertyChanged = true;
+    }
+
+    private void Save()
+    {
+        var arr = _container.SortedItems;
+        schedulingServive.SaveAll(arr.Select(item => item.Create()));
+        foreach (WorkCodeItemVM itemVm in arr.Where(item => item.IsColorChanged))
+        {
+            schedulingServive.RegisterColor(itemVm.Id, itemVm.ColorCode);
+        }
+
+        _propertyChanged = false;
+    }
+}

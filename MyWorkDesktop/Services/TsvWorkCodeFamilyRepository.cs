@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.Text;
 using MyWorkDashboard.Shared;
-using MyWorkDashboard.Shared.Services;
 using MyWorkDashboard.Shared.WorkCodeFamilies;
 
 namespace MyWorkDesktop.Services;
@@ -76,14 +76,27 @@ public class TsvWorkCodeFamilyRepository : IWorkCodeFamilyRepository, IDutyColor
 
     public string GetNewId()
     {
-        // たぶん使わない
-        throw new System.NotImplementedException();
+        return $"F{DateTime.Now.Ticks.ToString()}";
     }
 
     public void Register(WorkCodeFamily workCodeFamily)
     {
         // たぶん使わない
         throw new System.NotImplementedException();
+    }
+
+    public void Register(string id, string colorCode)
+    {
+        if (ColorDictionary.ContainsKey(id))
+        {
+            ColorDictionary[id] = colorCode;
+        }
+        else
+        {
+            ColorDictionary.Add(id, colorCode);
+        }
+
+        SaveAll(WorkCodeFamilies.ToArray());
     }
 
     public void Delete(string familyId)
@@ -102,8 +115,32 @@ public class TsvWorkCodeFamilyRepository : IWorkCodeFamilyRepository, IDutyColor
         return WorkCodeFamilies.ToArray();
     }
 
+    public void SaveAll(IEnumerable<WorkCodeFamily> families)
+    {
+        var arr = families.ToArray();
+        File.Copy(TsvrFilePath, TsvrFilePath + "_bk", true);
+
+        using var writer = new StreamWriter(TsvrFilePath, Encoding.GetEncoding("shift_jis"), new FileStreamOptions() { Access = FileAccess.ReadWrite });
+
+        foreach (WorkCodeFamily family in arr)
+        {
+            writer.WriteLine($"{family.Id}\t{family.Category.Id}\t{family.Category.Name}\t{family.WorkCode.Id}\t{family.WorkCode.Name}\t{GetHtmlColorCodeById(family.Id)}");
+        }
+
+        WorkCodeFamilies.Clear();
+        WorkCodeFamilies.AddRange(arr);
+
+    }
+
     public string GetHtmlColorCodeById(string workCodeFamilyId)
     {
-        return ColorDictionary[workCodeFamilyId];
+        if (ColorDictionary.TryGetValue(workCodeFamilyId, out var colorCode))
+        {
+            return colorCode;
+        }
+
+        return "#c0c0c0";
     }
+
+
 }

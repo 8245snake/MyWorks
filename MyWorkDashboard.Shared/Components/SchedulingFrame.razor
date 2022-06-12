@@ -183,7 +183,7 @@
             {
                 isSelected = ( duty.Id == selectedId);
             }
-            string colorCode = schedulingServive.GetWorkCodeFamilyColorCode(duty.Id);
+            string colorCode = schedulingServive.GetDutyColorCode(duty.Id);
             _duties.Add(new DutyBar(duty, top, bottom - top, colorCode) { IsSelected = isSelected });
         }
     }
