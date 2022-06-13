@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
+using System.Windows.Threading;
 using MyWorkDashboard.Shared.Services;
 using MyWorkDesktop.Services;
 
@@ -39,6 +40,13 @@ namespace MyWorkDesktop
             serviceCollection.AddSingleton<PageNavigatingService>();
 
             Resources.Add("services", serviceCollection.BuildServiceProvider());
+
+            this.DispatcherUnhandledException += OnDispatcherUnhandledException;
+        }
+
+        private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        {
+            MessageBox.Show("例外が発生したためアプリケーションを終了します");
         }
 
         // ウィンドウハンドルを取得

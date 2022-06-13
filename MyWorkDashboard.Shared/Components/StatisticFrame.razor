@@ -103,19 +103,26 @@
 
     private void ChangeTargetDate(DateOnly? date)
     {
-        _isEmpty = true;
-        if (date != null)
+        try
         {
-            var duties = schedulingServive.FindDutiesByDate(date.Value);
-            if (duties.Length > 0)
+            _isEmpty = true;
+            if (date != null)
             {
-                _isEmpty = false;
-                _items = schedulingServive?
-                    .TakeStatisticsOfSelectedDay()?
-                    .Select(result => new StatisticsTableViewModel(result))?
-                    .OrderBy(model => model.WorkCode)?
-                    .ToArray();
+                var duties = schedulingServive.FindDutiesByDate(date.Value);
+                if (duties.Length > 0)
+                {
+                    _isEmpty = false;
+                    _items = schedulingServive?
+                        .TakeStatisticsOfSelectedDay()?
+                        .Select(result => new StatisticsTableViewModel(result))?
+                        .OrderBy(model => model.WorkCode)?
+                        .ToArray();
+                }
             }
+        }
+        catch (Exception e)
+        {
+            messageService.Error(e.Message, 3);
         }
     }
 

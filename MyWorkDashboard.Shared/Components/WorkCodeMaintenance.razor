@@ -131,5 +131,11 @@
         }
 
         _propertyChanged = false;
+
+        foreach (WorkCodeItemVM item in _workCodes)
+        {
+            item.PropertyChanged -= ItemOnPropertyChanged;
+            item.PropertyChanged += ItemOnPropertyChanged;
+        }
     }
 }

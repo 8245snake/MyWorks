@@ -9,8 +9,8 @@
     <div class="task-color-label" style=@($"background-color: {ColorCode};")></div>
     <div class="task-color-content">
         <div class="bar-top">
-            <p style="max-width: 40%; white-space: nowrap" class="bar-titile">@(Duty.StartTime)～@(Duty.EndTime) (@(_timeSpanText))</p>
-            <p style="font-size: 10px; max-width: 60%; white-space: nowrap">@_workCodetext</p>
+            <p style="max-width: 40%; white-space: nowrap;" class="bar-titile">@(Duty.StartTime)～@(Duty.EndTime) (@(_timeSpanText))</p>
+            <p style="font-size: 10px; max-width: 60%; white-space: nowrap; overflow: hidden;">@_workCodetext</p>
         </div>
         
         <p class="bar-titile">@Duty.Title</p>
@@ -95,6 +95,7 @@
         {
             var duty = Duty as BusinessDuty;
             var family = schedulingServive.GetAllWorkCodeFamily().FirstOrDefault(d => d.Id == duty.WorkCodeFamilyId);
+            if (family == null) return $"!IDが見つかりませんでした! ID={duty.WorkCodeFamilyId}";
             return family.Description;
         }
     }
