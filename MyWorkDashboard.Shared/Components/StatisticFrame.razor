@@ -19,10 +19,36 @@
 
 
 <div class="statistic-frame" hidden="@(_isEmpty)">
-
+    <Row>
+        @if (_firstTime != null)
+        {
+            TypographyCopyableConfig selfDefinedText = new TypographyCopyableConfig()
+            {
+                Text = _firstTime.Replace(":", ""),
+                OnCopy = () =>
+                {
+                    messageService.Success("コピーしました", 1);
+                }
+            };
+            <AntDesign.Paragraph Copyable CopyConfig="selfDefinedText" Style="font-size: 20px;">@_firstTime</AntDesign.Paragraph>
+        }
+        <AntDesign.Paragraph Style="font-size: 20px;">～</AntDesign.Paragraph>
+        @if (_lastTime != null)
+        {
+            TypographyCopyableConfig selfDefinedText = new TypographyCopyableConfig()
+            {
+                Text = _lastTime.Replace(":", ""),
+                OnCopy = () =>
+                {
+                    messageService.Success("コピーしました", 1);
+                }
+            };
+            <AntDesign.Paragraph Copyable CopyConfig="selfDefinedText" Style="font-size: 20px;">@_lastTime</AntDesign.Paragraph>
+        }
+    </Row>
     <Row>
         <Col Span="24">
-            <div style="padding: 10px">
+            <div style="padding: 5px">
                 <Table TItem="StatisticsTableViewModel" DataSource="@_items" OnRowClick="OnRowClick" HidePagination="true" Size="TableSize.Small">
                     <Column @bind-Field="@context.Category" Sortable >
                         <p>@context.Category</p>
@@ -72,7 +98,6 @@
 
 <style>
     .statistic-frame {
-        border: 1px black solid;
         height: 100%;
     }
 </style>
@@ -81,6 +106,9 @@
 
 
     private bool _isEmpty = true;
+
+    private string _firstTime;
+    private string _lastTime;
 
     protected override void OnInitialized()
     {
@@ -105,6 +133,8 @@
     {
         try
         {
+            _firstTime = null;
+            _lastTime = null;
             _isEmpty = true;
             if (date != null)
             {
@@ -117,6 +147,11 @@
                         .Select(result => new StatisticsTableViewModel(result))?
                         .OrderBy(model => model.WorkCode)?
                         .ToArray();
+
+
+                    _firstTime = duties.OrderBy(d => d.StartTime).First().StartTime.ToString("HH:mm");
+                    _lastTime = duties.OrderByDescending(d => d.StartTime).First().EndTime.ToString("HH:mm");
+
                 }
             }
         }
