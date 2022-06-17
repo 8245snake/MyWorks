@@ -7,10 +7,13 @@ namespace MyWorkDashboard.Shared;
 /// </summary>
 public interface IWorkCodeFamilyRepository
 {
-    public string GetNewId();
-    void Register(WorkCodeFamily workCodeFamily);
-    void Delete(string familyId);
+    string GetNewId();
+    void RegisterAll(IEnumerable<WorkCodeFamily> families);
     WorkCodeFamily? FindById(string familyId);
     WorkCodeFamily[] GetAll();
-    void SaveAll(IEnumerable<WorkCodeFamily> families);
+
+    Task<string> GetNewIdAsync();
+    Task RegisterAllAsync(IEnumerable<WorkCodeFamily> families);
+    Task<WorkCodeFamily?> FindByIdAsync(string familyId);
+    Task<WorkCodeFamily[]> GetAllAsync();
 }

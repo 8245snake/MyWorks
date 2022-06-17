@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-
-namespace MyWorkDashboard.Shared.Services;
+﻿namespace MyWorkDashboard.Shared.Services;
 
 public class ControlService
 {

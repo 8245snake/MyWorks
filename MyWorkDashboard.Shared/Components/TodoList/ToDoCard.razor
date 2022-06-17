@@ -1,4 +1,6 @@
-﻿@using System.ComponentModel.DataAnnotations
+﻿@namespace MyWorkDashboard.Shared
+
+@using System.ComponentModel.DataAnnotations
 
 <Card Hoverable="true" Style="padding: 2px" BodyStyle="padding: 2px">
     <Body>
@@ -81,16 +83,17 @@
         }
     }
 
-    private void OnBlur()
+    private async Task OnBlur()
     {
         _isEditting = false;
         if (_canDeleteOnEmpty && string.IsNullOrWhiteSpace(_description))
         {
             // 一度でも文字が入力されたことがあった場合は空にしたときに削除する
-            DeleteTask();
+            await DeleteTask();
             return;
         }
-        Model.Update();
+
+        await Model.Update();
     }
 
     protected override void OnAfterRender(bool firstRender)
@@ -103,21 +106,21 @@
         }
     }
 
-    private void CreateTask()
+    private async Task CreateTask()
     {
-        Model.CreateTask();
-        StateChanged.InvokeAsync(this);
+        await Model.CreateTask();
+        await StateChanged.InvokeAsync(this);
     }
 
-    private void SendTomorrow()
+    private async Task SendTomorrow()
     {
-        Model.SendTomorrow();
-        StateChanged.InvokeAsync(this);
+        await Model.SendTomorrow();
+        await StateChanged.InvokeAsync(this);
     }
 
-    private void DeleteTask()
+    private async Task DeleteTask()
     {
-        Model.DeleteTask();
-        StateChanged.InvokeAsync(this);
+        await Model.DeleteTask();
+        await StateChanged.InvokeAsync(this);
     }
 }

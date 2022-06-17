@@ -1,4 +1,4 @@
-﻿namespace MyWorkDashboard.Shared.Components;
+﻿namespace MyWorkDashboard.Shared;
 
 public class TimeRangeChangeEventArgs : EventArgs
 {

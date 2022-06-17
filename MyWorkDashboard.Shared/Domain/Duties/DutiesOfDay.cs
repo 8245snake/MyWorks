@@ -13,13 +13,15 @@ public class DutiesOfDay
     }
 
 
-    public DutyStaticticResult[] TakeStatistics(IWorkCodeFamilyRepository repository)
+    public async Task<DutyStaticticResult[]> TakeStatistics(IWorkCodeFamilyRepository repository)
     {
+        if (repository == null) return new DutyStaticticResult[]{};
+
         List<DutyStaticticResult> results = new List<DutyStaticticResult>();
 
         foreach (var gr in this._duties.OfType<BusinessDuty>().GroupBy(d=>d.WorkCodeFamilyId))
         {
-            WorkCodeFamily family = repository.FindById(gr.Key);
+            WorkCodeFamily family = await repository.FindByIdAsync(gr.Key);
             if (family == null)
             {
                 throw new DataException($"データ不整合です。WorkCodeFamilyId={gr.Key} のデータは存在しません");

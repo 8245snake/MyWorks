@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using MyWorkDashboard.Shared;
 using MyWorkDashboard.Shared.Duties;
 using Newtonsoft.Json;
@@ -29,12 +31,12 @@ public class JsonDutyRepository : IDutyRepository
         _settings.Converters.Add(new NullableTimeOnlyJsonConverter());
     }
 
-    public string GetNewId()
+    private string GetNewId()
     {
         return $"D{DateTime.Now.Ticks.ToString()}";
     }
 
-    public void Register(Duty duty)
+    private void Register(Duty duty)
     {
         try
         {
@@ -53,7 +55,7 @@ public class JsonDutyRepository : IDutyRepository
         }
     }
 
-    public void Delete(string dutyId)
+    private void Delete(string dutyId)
     {
         try
         {
@@ -68,7 +70,7 @@ public class JsonDutyRepository : IDutyRepository
         }
     }
 
-    public Duty FindById(string dutyId)
+    private Duty FindById(string dutyId)
     {
         try
         {
@@ -93,12 +95,39 @@ public class JsonDutyRepository : IDutyRepository
         return foundPath;
     }
 
-    public Duty[] FindByDate(DateOnly date)
+    private Duty[] FindByDate(DateOnly date)
     {
         var dir = GetDateFolderPath(date);
         if (!Directory.Exists(dir)) return new Duty[] { };
 
         return CreateDuties(dir).ToArray();
+    }
+
+    public Task<string> GetNewIdAsync()
+    {
+        return Task.FromResult(GetNewId());
+    }
+
+    public Task RegisterAsync(Duty duty)
+    {
+        Register(duty);
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteAsync(string dutyId)
+    {
+        Delete(dutyId);
+        return Task.CompletedTask;
+    }
+
+    public Task<Duty> FindByIdAsync(string dutyId)
+    {
+        return Task.FromResult(FindById(dutyId));
+    }
+
+    public Task<Duty[]> FindByDateAsync(DateOnly date)
+    {
+        return Task.FromResult(FindByDate(date));
     }
 
     private IEnumerable<Duty> CreateDuties(string dir)

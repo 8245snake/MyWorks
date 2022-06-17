@@ -1,8 +1,8 @@
-﻿namespace MyWorkDashboard.Shared.Services;
+﻿namespace MyWorkDashboard.Shared.Mock;
 
 public class MockDutyColorRepository : IDutyColorRepository
 {
-    private Dictionary<string, string> _colorDictionary;
+    private readonly Dictionary<string, string> _colorDictionary;
 
     public MockDutyColorRepository()
     {
@@ -55,5 +55,16 @@ public class MockDutyColorRepository : IDutyColorRepository
         {
             _colorDictionary.Add(id, colorCode);
         }
+    }
+
+    public Task<string> GetHtmlColorCodeByIdAsync(string workCodeFamilyId)
+    {
+        return Task.FromResult(GetHtmlColorCodeById(workCodeFamilyId));
+    }
+
+    public Task RegisterAsync(string id, string colorCode)
+    {
+        Register(id, colorCode);
+        return Task.CompletedTask;
     }
 }

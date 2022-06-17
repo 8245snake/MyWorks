@@ -1,8 +1,7 @@
-﻿
-using MyWorkDashboard.Shared.Services;
+﻿using MyWorkDashboard.Shared.Services;
 using MyWorkDashboard.Shared.WorkCodeFamilies;
 
-namespace MyWorkDashboard.Shared.Components;
+namespace MyWorkDashboard.Shared;
 
 public class WorkCodeItemVM
 {

@@ -1,4 +1,6 @@
-﻿@using MyWorkDashboard.Shared.Services
+﻿@namespace MyWorkDashboard.Shared
+
+@using MyWorkDashboard.Shared.Services
 @using System.ComponentModel
 @using MyWorkDashboard.Shared.Duties
 @implements IDisposable
@@ -8,7 +10,7 @@
 <div style="height: 100%; width: 100%;" @oncontextmenu:stopPropagation @oncontextmenu:preventDefault>
 
     <Row Style="height: 100%;">
-        <div class="schedule-area">
+        <div class="schedule-area schedule-area-color">
             
             @foreach (TimeRow row in _rows.Rows)
             {
@@ -16,18 +18,14 @@
                     <div class="time-row-item time-label">
                         @(row.Time.ToString())
                     </div>
-                    <div class="time-row-item time-border" >
+                    <div class="time-row-item time-border time-border-color" >
                     </div>
                 </div>
             }
             
             @foreach (DutyBar bar in _duties.Bars)
             {
-                <Popover Placement="@Placement.Right" TitleTemplate="@GetBarPopupTitle(bar)" ContentTemplate="@GetBarPopupContent(bar)" Trigger="@(new[] {AntDesign.Trigger.Hover})">
-                    <div class="time-bar @bar.AdditionalClass" style="@bar.BarStyle" @onclick="bar.OnClick" >
-                        <p class="bar-text">@(bar.Duty.StartTime)～@(bar.Duty.EndTime)  @bar.Duty.Title</p>
-                    </div>
-                </Popover>
+                <SchedulingTaskBar BarModel="bar"></SchedulingTaskBar>
             }
 
         </div>
@@ -35,27 +33,9 @@
 
 </div>
 
-@code
-{
-
-
-    private RenderFragment GetBarPopupTitle(DutyBar bar) => @<p>@bar.Duty.Title</p>;
-
-    
-    private RenderFragment GetBarPopupContent(DutyBar bar) =>
-        @<div>
-            @foreach (var line in bar.Duty.Description.Split('\n'))
-            {
-                @line<br/>
-            }
-        </div>;
-
-}
-
 <style>
     .schedule-area {
         position: relative;
-        background-color: white;
         width: 100%;
         overflow-y: scroll;
     }
@@ -78,37 +58,6 @@
     .time-border {
         width: calc(100% - @(DutyBar.TimeWidth)px);
         height: 100%;
-        border: 1px #e9e9e9 solid;
-    }
-
-    .time-border:hover {
-        background-color: ivory;
-    }
-
-    .time-bar {
-        width: calc(95% - @(DutyBar.TimeWidth)px);
-        position: absolute;
-        opacity: 0.5;
-        border: 0.5px black solid;
-        cursor: pointer;
-        overflow: hidden;
-    }
-
-    .time-bar:hover {
-        opacity: 1.0;
-    }
-
-    .bar-text {
-        color: black;
-        font-size: 12px;
-        opacity: 1.0;
-        margin-top: 0px;
-        margin-bottom: 0px;
-    }
-
-    .bar-selected {
-        background-color: bisque;
-        opacity: 1.0;
     }
 
 </style>
@@ -116,65 +65,78 @@
 @code {
 
     DateOnly? _dateTime => schedulingServive.SelectedDate;
-    private TimeRowCollection _rows;
+    private readonly TimeRowCollection _rows = new TimeRowCollection();
     private readonly DutyBarCollection _duties = new DutyBarCollection();
 
-    protected override void OnInitialized()
+    protected override async void OnInitialized()
     {
-        _rows = new TimeRowCollection(AppendNewSchedule);
+        _rows.RowSelected += TimeRowOnSelected;
 
         schedulingServive.SelectedDutyChanged += OnSelectedDutyChanged;
         schedulingServive.DutyPropertyChanged += OnPropertyChanged;
         schedulingServive.SelectedDateChanged += OnSelectedDateChanged;
         _duties.ItemSelected += DutiesOnItemSelected;
 
-        ShowTimeBars(_dateTime.Value);
+        await ShowTimeBarsAsync(_dateTime.Value);
         StateHasChanged();
     }
 
-    private void OnSelectedDateChanged(object? sender, EventArgs e)
+    private async void TimeRowOnSelected(object? sender, TimeRowSelectEventArgs e)
+    {
+        await AppendNewScheduleAsync(e.Time);
+    }
+
+    private async void OnSelectedDateChanged(object? sender, EventArgs e)
     {
         if(sender == this) return;
-        ShowTimeBars(_dateTime.Value);
+        await ShowTimeBarsAsync(_dateTime.Value);
         StateHasChanged();
     }
 
-    private void OnSelectedDutyChanged(object? sender, EventArgs e)
+    private async void OnSelectedDutyChanged(object? sender, EventArgs e)
     {
         if(sender == this) return;
 
         if (schedulingServive.SelectedDuty != null)
         {
             var selectedBar = _duties.Bars.FirstOrDefault(bar => bar.Duty.Id == schedulingServive.SelectedDuty.Id);
+            if (selectedBar == null)
+            {
+                // 新規追加されている可能性があるので再チャレンジ
+                await ShowTimeBarsAsync(_dateTime.Value);
+                selectedBar = _duties.Bars.FirstOrDefault(bar => bar.Duty.Id == schedulingServive.SelectedDuty.Id);
+            }
+
             if (selectedBar != null)
             {
                 selectedBar.OnClick.Invoke(new MouseEventArgs());
             }
         }
-        ShowTimeBars(_dateTime.Value);
+        await ShowTimeBarsAsync(_dateTime.Value);
         StateHasChanged();
     }
 
-    private void OnPropertyChanged(object? sender, EventArgs e)
+    private async void OnPropertyChanged(object? sender, EventArgs e)
     {
         if(sender == this) return;
-        ShowTimeBars(_dateTime.Value);
+        await ShowTimeBarsAsync(_dateTime.Value);
         StateHasChanged();
     }
 
-    private void DutiesOnItemSelected(object? sender, DutySelectedEventArgs e)
+    private async void DutiesOnItemSelected(object? sender, DutySelectedEventArgs e)
     {
-        schedulingServive.ChangeSelectedDuty(e.SelectedDuty, this);
+        await schedulingServive.ChangeSelectedDuty(e.SelectedDuty, this);
     }
 
 
-    private void ShowTimeBars(DateOnly date)
+    private async Task ShowTimeBarsAsync(DateOnly date)
     {
         // 選択中のIDを覚えておく
         var selectedId = _duties.Bars.FirstOrDefault(d => d.IsSelected)?.Duty.Id;
 
         _duties.Clear();
-        foreach (Duty duty in schedulingServive.FindDutiesByDate(date))
+        var duties = await schedulingServive.FindDutiesByDateAsync(date);
+        foreach (Duty duty in duties)
         {
             int top = _rows.TimeToPixel(duty.StartTime);
             int bottom = _rows.TimeToPixel(duty.EndTime);
@@ -183,12 +145,17 @@
             {
                 isSelected = ( duty.Id == selectedId);
             }
-            string colorCode = schedulingServive.GetDutyColorCode(duty.Id);
+            string colorCode = await schedulingServive.GetDutyColorCodeAsync(duty.Id);
             _duties.Add(new DutyBar(duty, top, bottom - top, colorCode) { IsSelected = isSelected });
         }
     }
 
-    private void AppendNewSchedule(TimeOnly selectedTimeBlock)
+    /// <summary>
+    /// 指定した時刻のブロックに新規タスクを追加する
+    /// </summary>
+    /// <param name="selectedTimeBlock">時刻ブロックの開始時刻</param>
+    /// <returns></returns>
+    private async Task AppendNewScheduleAsync(TimeOnly selectedTimeBlock)
     {
         if (_dateTime == null) return;
 
@@ -214,14 +181,16 @@
             end = freeTimeRange.EndTime;
         }
 
-        var createdDuty = schedulingServive.CreateNewDuty(date, start, end);
-        ShowTimeBars(_dateTime.Value);
+        Duty createdDuty = await schedulingServive.CreateNewDutyAsync(date, start, end);
+        await ShowTimeBarsAsync(_dateTime.Value);
+
         StateHasChanged();
-        schedulingServive.ChangeSelectedDuty(createdDuty, new object());
+        await schedulingServive.ChangeSelectedDuty(createdDuty, new object());
     }
 
     public void Dispose()
     {
+        _rows.RowSelected -= TimeRowOnSelected;
         schedulingServive.SelectedDutyChanged -= OnSelectedDutyChanged;
         schedulingServive.DutyPropertyChanged -= OnPropertyChanged;
         schedulingServive.SelectedDateChanged -= OnSelectedDateChanged;

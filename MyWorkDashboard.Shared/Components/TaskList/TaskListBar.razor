@@ -1,11 +1,13 @@
-﻿@using MyWorkDashboard.Shared.Duties
+﻿@namespace MyWorkDashboard.Shared
+
+@using MyWorkDashboard.Shared.Duties
 @using System.ComponentModel.DataAnnotations
 @using System.Dynamic
 @using MyWorkDashboard.Shared.Services
 
 @inject SchedulingServive schedulingServive
 
-<div class="task-list-bar @SelectedStyle" @onclick="e => { OnSelected.InvokeAsync(e);}">
+<div class="task-list-bar task-list-bar-color @SelectedStyle" @onclick="e => { OnSelected.InvokeAsync(e);}">
     <div class="task-color-label" style=@($"background-color: {ColorCode};")></div>
     <div class="task-color-content">
         <div class="bar-top">
@@ -25,14 +27,7 @@
     .task-list-bar {
         height: 70px;
         width: 100%;
-        border: 1px #c0c0c0 solid;
         cursor: pointer;
-        background-color: white;
-    }
-
-    .task-list-bar:hover {
-        background-color: ivory;
-        opacity: 1.0;
     }
 
     .task-color-label {
@@ -50,7 +45,6 @@
     .bar-titile {
         margin: 0px 0px 0px 0px;
     }
-
     
     .bar-description {
         height: 15px;
@@ -65,11 +59,6 @@
         flex-direction: row;
         justify-content: space-between;
         margin-right: 5px;
-    }
-
-    .bar-selected {
-        background-color: bisque;
-        border: 3px black solid;
     }
 
 </style>
@@ -94,7 +83,7 @@
         get
         {
             var duty = Duty as BusinessDuty;
-            var family = schedulingServive.GetAllWorkCodeFamily().FirstOrDefault(d => d.Id == duty.WorkCodeFamilyId);
+            var family = schedulingServive.GetAllWorkCodeFamily().Result.FirstOrDefault(d => d.Id == duty.WorkCodeFamilyId);
             if (family == null) return $"!IDが見つかりませんでした! ID={duty.WorkCodeFamilyId}";
             return family.Description;
         }
@@ -109,14 +98,7 @@
         }
     }
 
-    private string SelectedStyle => this.Selected ? "bar-selected" : "";
-
-    protected override void OnInitialized()
-    {
-
-
-
-    }
+    private string SelectedStyle => this.Selected ? "list-selected-color" : "";
 
 
 }

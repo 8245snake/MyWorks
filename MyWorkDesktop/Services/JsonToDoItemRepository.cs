@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using MyWorkDashboard.Shared;
 using MyWorkDashboard.Shared.ToDoTasks;
 using Newtonsoft.Json;
@@ -102,6 +103,38 @@ public class JsonToDoItemRepository : IToDoRepository
         }
 
         return list.ToArray();
+    }
+
+    public Task<string> GetNewIdAsync()
+    {
+        return Task.FromResult(GetNewId());
+    }
+
+    public Task RegisterAsync(ToDoItem item)
+    {
+        Register(item);
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteAsync(string id)
+    {
+        Delete(id);
+        return Task.CompletedTask;
+    }
+
+    public Task<ToDoItem?> FindByIdAsync(string id)
+    {
+        return Task.FromResult(FindById(id));
+    }
+
+    public Task<ToDoItem[]> FindByDateAsync(DateOnly date)
+    {
+        return Task.FromResult(FindByDate(date));
+    }
+
+    public Task<ToDoItem[]> FindItemsBeforeThanAsync(DateOnly date)
+    {
+        return Task.FromResult(FindItemsBeforeThan(date));
     }
 
     private string FindJsonPathById(string dutyId)

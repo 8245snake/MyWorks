@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using MyWorkDashboard.Shared;
 using MyWorkDashboard.Shared.WorkCodeFamilies;
 
@@ -79,12 +80,6 @@ public class TsvWorkCodeFamilyRepository : IWorkCodeFamilyRepository, IDutyColor
         return $"F{DateTime.Now.Ticks.ToString()}";
     }
 
-    public void Register(WorkCodeFamily workCodeFamily)
-    {
-        // たぶん使わない
-        throw new System.NotImplementedException();
-    }
-
     public void Register(string id, string colorCode)
     {
         if (ColorDictionary.ContainsKey(id))
@@ -96,13 +91,18 @@ public class TsvWorkCodeFamilyRepository : IWorkCodeFamilyRepository, IDutyColor
             ColorDictionary.Add(id, colorCode);
         }
 
-        SaveAll(WorkCodeFamilies.ToArray());
+        RegisterAll(WorkCodeFamilies.ToArray());
     }
 
-    public void Delete(string familyId)
+    public Task<string> GetHtmlColorCodeByIdAsync(string workCodeFamilyId)
     {
-        // たぶん使わない
-        throw new System.NotImplementedException();
+        return Task.FromResult(GetHtmlColorCodeById(workCodeFamilyId));
+    }
+
+    public Task RegisterAsync(string id, string colorCode)
+    {
+        Register(id, colorCode);
+        return Task.CompletedTask;
     }
 
     public WorkCodeFamily? FindById(string familyId)
@@ -115,7 +115,28 @@ public class TsvWorkCodeFamilyRepository : IWorkCodeFamilyRepository, IDutyColor
         return WorkCodeFamilies.ToArray();
     }
 
-    public void SaveAll(IEnumerable<WorkCodeFamily> families)
+    public Task<string> GetNewIdAsync()
+    {
+        return Task.FromResult(GetNewId());
+    }
+
+    public Task RegisterAllAsync(IEnumerable<WorkCodeFamily> families)
+    {
+        RegisterAll(families);
+        return Task.CompletedTask;
+    }
+
+    public Task<WorkCodeFamily?> FindByIdAsync(string familyId)
+    {
+        return Task.FromResult(FindById(familyId));
+    }
+
+    public Task<WorkCodeFamily[]> GetAllAsync()
+    {
+        return Task.FromResult(GetAll());
+    }
+
+    public void RegisterAll(IEnumerable<WorkCodeFamily> families)
     {
         var arr = families.ToArray();
         File.Copy(TsvrFilePath, TsvrFilePath + "_bk", true);

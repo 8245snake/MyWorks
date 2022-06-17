@@ -1,4 +1,6 @@
-﻿@using MyWorkDashboard.Shared.Services
+﻿@namespace MyWorkDashboard.Shared
+
+@using MyWorkDashboard.Shared.Services
 @using System.ComponentModel
 @using AntDesign.TableModels
 @using MyWorkDashboard.Shared.Duties
@@ -110,26 +112,24 @@
     private string _firstTime;
     private string _lastTime;
 
-    protected override void OnInitialized()
+    protected override async void OnInitialized()
     {
-
         schedulingServive.DutyPropertyChanged += RetakeStatistics;
         schedulingServive.SelectedDateChanged += RetakeStatistics;
         schedulingServive.DutyDeleted += RetakeStatistics;
 
-
-        ChangeTargetDate(schedulingServive.SelectedDate);
+        await ChangeTargetDate(schedulingServive.SelectedDate);
         StateHasChanged();
     }
 
 
-    private void RetakeStatistics(object? sender, EventArgs e)
+    private async void RetakeStatistics(object? sender, EventArgs e)
     {
-        ChangeTargetDate(schedulingServive.SelectedDate);
+        await ChangeTargetDate(schedulingServive.SelectedDate);
         StateHasChanged();
     }
 
-    private void ChangeTargetDate(DateOnly? date)
+    private async Task ChangeTargetDate(DateOnly? date)
     {
         try
         {
@@ -138,26 +138,21 @@
             _isEmpty = true;
             if (date != null)
             {
-                var duties = schedulingServive.FindDutiesByDate(date.Value);
+                var duties = await schedulingServive.FindDutiesByDateAsync(date.Value);
                 if (duties.Length > 0)
                 {
                     _isEmpty = false;
-                    _items = schedulingServive?
-                        .TakeStatisticsOfSelectedDay()?
-                        .Select(result => new StatisticsTableViewModel(result))?
-                        .OrderBy(model => model.WorkCode)?
-                        .ToArray();
-
+                    DutyStaticticResult[] items = await schedulingServive?.TakeStatisticsOfSelectedDayAsync();
+                    _items = items.Select(result => new StatisticsTableViewModel(result))?.OrderBy(model => model.WorkCode)?.ToArray();
 
                     _firstTime = duties.OrderBy(d => d.StartTime).First().StartTime.ToString("HH:mm");
                     _lastTime = duties.OrderByDescending(d => d.StartTime).First().EndTime.ToString("HH:mm");
-
                 }
             }
         }
         catch (Exception e)
         {
-            messageService.Error(e.Message, 3);
+            await messageService.Error(e.Message, 3);
         }
     }
 

@@ -1,4 +1,6 @@
-﻿@using MyWorkDashboard.Shared.Services
+﻿@namespace MyWorkDashboard.Shared
+
+@using MyWorkDashboard.Shared.Services
 @using System.ComponentModel
 @using MyWorkDashboard.Shared.Duties
 @using MyWorkDashboard.Shared.WorkCodeFamilies
@@ -113,7 +115,7 @@
             if (schedulingServive.SelectedDuty != null)
             {
                 schedulingServive.SelectedDuty.Title = value + "";
-                schedulingServive.RaiseDutyPropertyChanged(this);
+                InvokeRaiseDutyPropertyChangedAsync();
             }
         }
     }
@@ -127,33 +129,30 @@
             {
                 schedulingServive.SelectedDuty.Description = value + "";
                 StateHasChanged();
-                schedulingServive.RaiseDutyPropertyChanged(this);
+                InvokeRaiseDutyPropertyChangedAsync();
             }
         }
     }
 
-
-    TimeOnly? StartTime
+    private async void InvokeRaiseDutyPropertyChangedAsync()
     {
-        get => schedulingServive.SelectedDuty?.StartTime;
+        await  schedulingServive.RaiseDutyPropertyChangedAsync(this);
     }
 
+    TimeOnly? StartTime => schedulingServive.SelectedDuty?.StartTime;
 
-    TimeOnly? EndTime
-    {
-        get => schedulingServive.SelectedDuty?.EndTime;
-    }
+    TimeOnly? EndTime => schedulingServive.SelectedDuty?.EndTime;
 
-    private void OnSelectedTimeChange(TimeRangeChangeEventArgs e)
+    private async void OnSelectedTimeChange(TimeRangeChangeEventArgs e)
     {
-        if (schedulingServive.SelectedDuty != null)
+        if (schedulingServive?.SelectedDuty != null)
         {
             if (schedulingServive.SelectedDuty.StartTime != e.StartTime || schedulingServive.SelectedDuty.EndTime != e.EndTime)
             {
                 schedulingServive.SelectedDuty.StartTime = e.StartTime;
                 schedulingServive.SelectedDuty.EndTime = e.EndTime;
                 StateHasChanged();
-                schedulingServive.RaiseDutyPropertyChanged(this);
+                await schedulingServive.RaiseDutyPropertyChangedAsync(this);
             }
         }
     }
@@ -176,7 +175,7 @@
                 {
                     businessDuty.WorkCodeFamilyId = value.Id;
                     StateHasChanged();
-                    schedulingServive.RaiseDutyPropertyChanged(this);
+                    InvokeRaiseDutyPropertyChangedAsync();
                 }
             }
         }
@@ -197,10 +196,10 @@
 
     List<WorkCodeVM> _codes;
 
-    protected override void OnInitialized()
+    protected override async void OnInitialized()
     {
         _codes = new List<WorkCodeVM>();
-        foreach (WorkCodeFamily family in schedulingServive.GetAllWorkCodeFamily())
+        foreach (WorkCodeFamily family in await schedulingServive.GetAllWorkCodeFamily())
         {
             _codes.Add(new WorkCodeVM(family));
         }
@@ -213,8 +212,7 @@
 
     private void OnSelectedDutyChanged(object? sender, EventArgs e)
     {
-        this.Title = schedulingServive.SelectedDuty?.Title;
-        this.Description = schedulingServive.SelectedDuty?.Description;
+        if (sender == this) return;
         StateHasChanged();
     }
 
@@ -224,14 +222,14 @@
         StateHasChanged();
     }
 
-    private void OnDeleteButtonClick()
+    private async Task OnDeleteButtonClick()
     {
-        schedulingServive.DeleteDuty(schedulingServive.SelectedDuty.Id);
-        schedulingServive.ChangeSelectedDuty(null, this);
-        messageService.Info("削除されました", 1);
+        await schedulingServive.DeleteDutyAsync(schedulingServive.SelectedDuty.Id);
+        await schedulingServive.ChangeSelectedDuty(null, this);
+        await messageService.Info("削除されました", 1);
     }
 
-    private void OnBackButtonClick()
+    private async Task OnBackButtonClick()
     {
         if (schedulingServive.SelectedDate == null) return;
         if (schedulingServive.SelectedDuty == null) return;
@@ -239,19 +237,17 @@
         TimeOnly start = schedulingServive.SelectedDuty.StartTime;
 
         // todo 重なっている場合
-        var found = schedulingServive
-            .FindDutiesByDate(schedulingServive.SelectedDate.Value)
+        var found = (await schedulingServive.FindDutiesByDateAsync(schedulingServive.SelectedDate.Value))
             .Where(d => d.EndTime < start)
             .MinBy(d => (start - d.EndTime).TotalMinutes);
 
         if (found == null) return;
 
         schedulingServive.SelectedDuty.StartTime = found.EndTime;
-        schedulingServive.RaiseDutyPropertyChanged(this);
-
+        await schedulingServive.RaiseDutyPropertyChangedAsync(this);
     }
 
-    private void OnForwordButtonClick()
+    private async Task OnForwordButtonClick()
     {
         if (schedulingServive.SelectedDate == null) return;
         if (schedulingServive.SelectedDuty == null) return;
@@ -259,29 +255,28 @@
         TimeOnly end = schedulingServive.SelectedDuty.EndTime;
 
         // todo 重なっている場合
-        var found = schedulingServive
-            .FindDutiesByDate(schedulingServive.SelectedDate.Value)
+        var found = (await schedulingServive.FindDutiesByDateAsync(schedulingServive.SelectedDate.Value))
             .Where(d => d.StartTime > end)
             .MinBy(d => (d.StartTime - end).TotalMinutes);
 
         if (found == null) return;
 
         schedulingServive.SelectedDuty.EndTime = found.StartTime;
-        schedulingServive.RaiseDutyPropertyChanged(this);
+        await schedulingServive.RaiseDutyPropertyChangedAsync(this);
     }
 
-    private void SendToDoList()
+    private async Task SendToDoList()
     {
         if (schedulingServive.SelectedDate == null) return;
         if (schedulingServive.SelectedDuty == null) return;
 
         var duty = schedulingServive.SelectedDuty;
-        var item = schedulingServive.CreateNewToDoItem(schedulingServive.SelectedDate.Value);
+        var item = await schedulingServive.CreateNewToDoItem(schedulingServive.SelectedDate.Value);
         item.Description = duty.Title;
-        schedulingServive.DeleteDuty(duty.Id);
-        schedulingServive.ChangeSelectedDuty(null, this);
+        await schedulingServive.DeleteDutyAsync(duty.Id);
+        await schedulingServive.ChangeSelectedDuty(null, this);
 
-        schedulingServive.UpdateToDoItem(item, this);
+        await schedulingServive.UpdateToDoItem(item, this);
     }
 
     public void Dispose()

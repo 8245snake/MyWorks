@@ -1,4 +1,5 @@
-﻿@typeparam TItem
+﻿@namespace MyWorkDashboard.Shared
+@typeparam TItem
 
 @using System.ComponentModel.DataAnnotations
 @implements IAsyncDisposable
@@ -7,7 +8,7 @@
     
     @foreach (var model in Models)
     {
-        <div style="@model.Style" @onclick="model.Click">
+        <div class="@model.Class" @onclick="model.Click">
             @ItemTemplate(model.Item)
         </div>
     }
@@ -26,7 +27,7 @@
     public IReadOnlyList<TItem> Items { get; set; }
 
     [Parameter]
-    public string SelectedStyle { get; set; }
+    public string SelectedStyleClass { get; set; }
 
     public TItem[] SortedItems => Models.Select(m => m.Item).ToArray();
 
@@ -96,12 +97,12 @@
         StateHasChanged();
     }
 
-    public void Rebuild( IReadOnlyList<TItem> items)
+    public void Rebuild(IReadOnlyList<TItem> items)
     {
         Models.Clear();
         foreach (TItem item in items)
         {
-            Models.Add(new PanelModel(item, SelectedStyle));
+            Models.Add(new PanelModel(item, SelectedStyleClass));
         }
 
         foreach (PanelModel model in Models)
@@ -128,7 +129,7 @@
     {
 
         public bool IsSelected { get; set; }
-        public string SelectedStyle { get; set; }
+        public string SelectedStyleClass { get; set; }
         public TItem Item { get; set; }
 
         public Action Click => () =>
@@ -139,24 +140,24 @@
 
         public event EventHandler? Selected;
 
-        public string Style
+        public string Class
         {
             get
             {
-                string selected = "background-color: aquamarine;";
-                if (!string.IsNullOrWhiteSpace(SelectedStyle))
+                string selected = "";
+                if (!string.IsNullOrWhiteSpace(SelectedStyleClass))
                 {
-                    selected = SelectedStyle;
+                    selected = SelectedStyleClass;
                 }
                 return IsSelected ? selected : "";
             }
         }
 
-        public PanelModel(TItem item, string selectedStyle)
+        public PanelModel(TItem item, string selectedStyleClass)
         {
             this.Item = item;
             this.IsSelected = false;
-            this.SelectedStyle = selectedStyle;
+            this.SelectedStyleClass = selectedStyleClass;
         }
 
 

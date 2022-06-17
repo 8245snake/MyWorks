@@ -19,8 +19,17 @@ public class MockToDoRepository : IToDoRepository
 
     public void Register(ToDoItem item)
     {
-        Delete(item.Id);
-        Items.Add(item);
+        var found = Items.FirstOrDefault(t => t.Id == item.Id);
+        if (found != null)
+        {
+            // 順番を保持したいため
+            var index = Items.IndexOf(found);
+            Items[index] = item;
+        }
+        else
+        {
+            Items.Add(item);
+        }
     }
 
     public void Delete(string id)
@@ -45,5 +54,37 @@ public class MockToDoRepository : IToDoRepository
     public ToDoItem[] FindItemsBeforeThan(DateOnly date)
     {
         return Items.Where(item => item.DueDate < date).ToArray();
+    }
+
+    public Task<string> GetNewIdAsync()
+    {
+        return Task.FromResult(GetNewId());
+    }
+
+    public Task RegisterAsync(ToDoItem item)
+    {
+        Register(item);
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteAsync(string id)
+    {
+        Delete(id);
+        return Task.CompletedTask;
+    }
+
+    public Task<ToDoItem?> FindByIdAsync(string id)
+    {
+        return Task.FromResult(FindById(id));
+    }
+
+    public Task<ToDoItem[]> FindByDateAsync(DateOnly date)
+    {
+        return Task.FromResult(FindByDate(date));
+    }
+
+    public Task<ToDoItem[]> FindItemsBeforeThanAsync(DateOnly date)
+    {
+        return Task.FromResult(FindItemsBeforeThan(date));
     }
 }

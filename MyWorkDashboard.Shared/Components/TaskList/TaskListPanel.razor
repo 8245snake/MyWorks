@@ -1,4 +1,6 @@
-﻿@using MyWorkDashboard.Shared.Services
+﻿@namespace MyWorkDashboard.Shared
+
+@using MyWorkDashboard.Shared.Services
 @using System.ComponentModel
 @using MyWorkDashboard.Shared.Duties
 
@@ -35,7 +37,7 @@
     DateOnly? _dateTime => schedulingServive.SelectedDate;
     private readonly DutyBarCollection _duties = new DutyBarCollection();
 
-    protected override void OnInitialized()
+    protected override async void OnInitialized()
     {
 
         schedulingServive.SelectedDutyChanged += OnSelectedDutyChanged;
@@ -43,19 +45,19 @@
         schedulingServive.SelectedDateChanged += OnSelectedDateChanged;
         _duties.ItemSelected += DutiesOnItemSelected;
 
-        ShowTimeBars(_dateTime.Value);
+        await ShowTimeBarsAsync(_dateTime.Value);
         StateHasChanged();
     }
 
 
-    private void OnSelectedDateChanged(object? sender, EventArgs e)
+    private async void OnSelectedDateChanged(object? sender, EventArgs e)
     {
         if(sender == this) return;
-        ShowTimeBars(_dateTime.Value);
+        await ShowTimeBarsAsync(_dateTime.Value);
         StateHasChanged();
     }
 
-    private void OnSelectedDutyChanged(object? sender, EventArgs e)
+    private async void OnSelectedDutyChanged(object? sender, EventArgs e)
     {
         if(sender == this) return;
 
@@ -71,20 +73,20 @@
             }
         }
 
-        ShowTimeBars(_dateTime.Value);
+        await ShowTimeBarsAsync(_dateTime.Value);
         StateHasChanged();
     }
 
-    private void OnPropertyChanged(object? sender, EventArgs e)
+    private async void OnPropertyChanged(object? sender, EventArgs e)
     {
         if(sender == this) return;
-        ShowTimeBars(_dateTime.Value);
+        await ShowTimeBarsAsync(_dateTime.Value);
         StateHasChanged();
     }
 
-    private void DutiesOnItemSelected(object? sender, DutySelectedEventArgs e)
+    private async void DutiesOnItemSelected(object? sender, DutySelectedEventArgs e)
     {
-        schedulingServive.ChangeSelectedDuty(e.SelectedDuty, this);
+        await schedulingServive.ChangeSelectedDuty(e.SelectedDuty, this);
         foreach (var bar in _duties.Bars)
         {
             bar.IsSelected = false;
@@ -97,20 +99,21 @@
     }
 
 
-    private void ShowTimeBars(DateOnly date)
+    private async Task ShowTimeBarsAsync(DateOnly date)
     {
         // 選択中のIDを覚えておく
         var selectedId = schedulingServive.SelectedDuty?.Id;
 
         _duties.Clear();
-        foreach (Duty duty in schedulingServive.FindDutiesByDate(date))
+        var duties = await schedulingServive.FindDutiesByDateAsync(date);
+        foreach (Duty duty in duties)
         {
             bool isSelected = false;
             if (!string.IsNullOrWhiteSpace(selectedId))
             {
                 isSelected = ( duty.Id == selectedId);
             }
-            string colorCode = schedulingServive.GetDutyColorCode(duty.Id);
+            string colorCode = await schedulingServive.GetDutyColorCodeAsync(duty.Id);
             _duties.Add(new DutyBar(duty, 60, colorCode) { IsSelected = isSelected });
         }
     }

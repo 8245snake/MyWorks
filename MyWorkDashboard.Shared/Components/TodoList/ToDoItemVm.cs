@@ -2,7 +2,7 @@
 using MyWorkDashboard.Shared.Services;
 using MyWorkDashboard.Shared.ToDoTasks;
 
-namespace MyWorkDashboard.Shared.Components;
+namespace MyWorkDashboard.Shared;
 
 public class ToDoItemVm
 {
@@ -19,36 +19,35 @@ public class ToDoItemVm
         _servive = servive;
     }
 
-    public void Update()
+    public async Task Update()
     {
-        _servive.UpdateToDoItem(Todo, this);
+        await _servive.UpdateToDoItem(Todo, this);
     }
 
-    public void CreateTask()
+    public async Task CreateTask()
     {
         if (_servive.SelectedDate == null) return;
 
-        Duty created = _servive.AddNewSchedule(_servive.SelectedDate.Value);
+        Duty created = await _servive.AddNewScheduleAsync(_servive.SelectedDate.Value);
+
         created.Title = Todo.Description;
-        _servive.ChangeSelectedDuty(created, new object());
-        _servive.RaiseDutyPropertyChanged(this);
-        _servive.ChangeSelectedDuty(created, new object());
+        await _servive.ChangeSelectedDuty(created, new object());
         DeleteTask();
     }
 
-    public void DeleteTask()
+    public async Task DeleteTask()
     {
         _todoItems.Remove(this);
-        _servive.DeleteToDoItem(Todo.Id);
+        await _servive.DeleteToDoItem(Todo.Id);
     }
 
-    public void SendTomorrow()
+    public async Task SendTomorrow()
     {
         _todoItems.Remove(this);
-        _servive.DeleteToDoItem(Todo.Id);
+        await _servive.DeleteToDoItem(Todo.Id);
 
         Todo.DueDate = Todo.DueDate.AddDays(1);
-        _servive.UpdateToDoItem(Todo, this);
+        await _servive.UpdateToDoItem(Todo, this);
     }
 
     public void Select()

@@ -1,0 +1,44 @@
+﻿@using System.ComponentModel.DataAnnotations
+@namespace MyWorkDashboard.Shared
+
+@*本文がない場合はポップアップを出さない*@
+<Popover Disabled="@(string.IsNullOrWhiteSpace(BarModel.Duty.Description))" Placement="@Placement.Right" TitleTemplate="@GetBarPopupTitle(BarModel)" ContentTemplate="@GetBarPopupContent(BarModel)" Trigger="@(new[] {AntDesign.Trigger.Hover})">
+    <div class="time-bar time-bar-color @BarModel.AdditionalClass" style="@BarModel.BarStyle" @onclick="BarModel.OnClick" >
+        <p class="bar-text">@(BarModel.Duty.StartTime)～@(BarModel.Duty.EndTime)  @BarModel.Duty.Title</p>
+    </div>
+</Popover>
+
+<style>
+    .time-bar {
+        width: calc(95% - @(DutyBar.TimeWidth)px);
+        position: absolute;
+        cursor: pointer;
+        overflow: hidden;
+    }
+
+    .bar-text {
+        color: black;
+        font-size: 12px;
+        opacity: 1.0;
+        margin-top: 0px;
+        margin-bottom: 0px;
+    }
+</style>
+
+@code {
+
+    [Parameter, Required]
+    public DutyBar BarModel { get; set; }
+
+    private RenderFragment GetBarPopupTitle(DutyBar bar) => @<p>@bar.Duty.Title</p>;
+
+
+    private RenderFragment GetBarPopupContent(DutyBar bar) =>
+        @<div>
+            @foreach (var line in bar.Duty.Description.Split('\n'))
+            {
+                @line<br/>
+            }
+        </div>;
+
+}

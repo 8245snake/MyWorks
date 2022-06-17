@@ -1,11 +1,14 @@
-﻿@using MyWorkDashboard.Shared.Services
+﻿@namespace MyWorkDashboard.Shared
+
+@using MyWorkDashboard.Shared.Services
 @using MyWorkDashboard.Shared.WorkCodeFamilies
+@using Microsoft.AspNetCore.Components
 
 @inject SchedulingServive schedulingServive
 
 <Row>
     <Col Span="22">
-        <SortableContainer Items="_workCodes" SelectedStyle="background-color: khaki;" @ref="_container">
+        <SortableContainer Items="_workCodes" SelectedStyleClass="list-selected-color" @ref="_container">
             <ItemTemplate>
                 <div style="padding: 5px; border: 1px black solid;">
                     <Row>
@@ -65,9 +68,9 @@
     public bool PropertyChanged => _propertyChanged;
 
 
-    protected override void OnInitialized()
+    protected override async void OnInitialized()
     {
-        _workCodes = schedulingServive.GetAllWorkCodeFamily().Select((f, index) => new WorkCodeItemVM(f, schedulingServive)).ToArray();
+        _workCodes = (await schedulingServive.GetAllWorkCodeFamily()).Select((f, index) => new WorkCodeItemVM(f, schedulingServive)).ToArray();
         foreach (WorkCodeItemVM item in _workCodes)
         {
             item.PropertyChanged += ItemOnPropertyChanged;
@@ -109,10 +112,11 @@
         _propertyChanged = true;
     }
 
-    private void CreateNew()
+    private async Task CreateNew()
     {
-        string id = schedulingServive.AddNewWorkCodeId();
+        string id = await schedulingServive.GetNewWorkCodeIdAsync();
         WorkCodeFamily code = new WorkCodeFamily(id, new WorkCategory("", ""), new WorkCode("", ""));
+
         var list = _workCodes.ToList();
         list.Add(new WorkCodeItemVM(code, schedulingServive));
         _workCodes = list.ToArray();
@@ -121,13 +125,14 @@
         _propertyChanged = true;
     }
 
-    private void Save()
+    private async Task Save()
     {
         var arr = _container.SortedItems;
-        schedulingServive.SaveAll(arr.Select(item => item.Create()));
+        await schedulingServive.SaveAll(arr.Select(item => item.Create()));
+
         foreach (WorkCodeItemVM itemVm in arr.Where(item => item.IsColorChanged))
         {
-            schedulingServive.RegisterColor(itemVm.Id, itemVm.ColorCode);
+            await schedulingServive.RegisterColorAsync(itemVm.Id, itemVm.ColorCode);
         }
 
         _propertyChanged = false;

@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-using MyWorkDashboard.Shared.Components;
-using MyWorkDashboard.Shared.Duties;
+﻿using MyWorkDashboard.Shared.Duties;
 using MyWorkDashboard.Shared.Mock;
 using MyWorkDashboard.Shared.ToDoTasks;
 using MyWorkDashboard.Shared.WorkCodeFamilies;
@@ -56,19 +54,25 @@ public class SchedulingServive
         _toDoRepository = toDoRepository;
     }
 
-    public WorkCodeFamily[] GetAllWorkCodeFamily()
+    public Task<WorkCodeFamily[]> GetAllWorkCodeFamily()
     {
-        return _workCodeFamilyRepository.GetAll();
+        return _workCodeFamilyRepository.GetAllAsync();
     }
 
-    public string GetDutyColorCode(string dutyId)
+
+    /// <summary>
+    /// <see cref="BusinessDuty"/>のカラーコードを取得する
+    /// </summary>
+    /// <param name="dutyId">検索対象の<see cref="Duty.Id"/></param>
+    /// <returns>Htmlカラーコード</returns>
+    public async Task<string> GetDutyColorCodeAsync(string dutyId)
     {
-        var duty = _dutyRepository.FindById(dutyId) as BusinessDuty;
+        BusinessDuty duty = await _dutyRepository.FindByIdAsync(dutyId) as BusinessDuty;
         if (duty == null)
         {
             return "#cccccc";
         }
-        return _dutyColorRepository.GetHtmlColorCodeById(duty.WorkCodeFamilyId);
+        return await _dutyColorRepository.GetHtmlColorCodeByIdAsync(duty.WorkCodeFamilyId);
     }
 
     public string GetWorkCodeFamilyColorCode(string famulyId)
@@ -76,44 +80,47 @@ public class SchedulingServive
         return _dutyColorRepository.GetHtmlColorCodeById(famulyId);
     }
 
-    public void ChangeSelectedDuty(Duty duty, object sender)
+    public Task ChangeSelectedDuty(Duty duty, object sender)
     {
         SelectedDuty = duty;
         SelectedDutyChanged?.Invoke(sender, EventArgs.Empty);
+        return Task.CompletedTask;
     }
 
-    public void ChangeSelectedDate(DateOnly? date, object sender)
+    public Task ChangeSelectedDateAsync(DateOnly? date, object sender)
     {
         SelectedDate = date;
         SelectedDateChanged?.Invoke(sender, EventArgs.Empty);
+        return Task.CompletedTask;
     }
 
-    public void RaiseDutyPropertyChanged(object? sender)
+    public async Task RaiseDutyPropertyChangedAsync(object? sender)
     {
-        _dutyRepository.Register(SelectedDuty);
+        await _dutyRepository.RegisterAsync(SelectedDuty);
         DutyPropertyChanged.Invoke(sender, EventArgs.Empty);
     }
 
-    public Duty[] FindDutiesByDate(DateOnly date)
+    public async Task<Duty[]> FindDutiesByDateAsync(DateOnly date)
     {
-        return _dutyRepository.FindByDate(date).ToArray();
+        return await _dutyRepository.FindByDateAsync(date);
     }
 
-    public Duty CreateNewDuty(DateOnly date, TimeOnly start, TimeOnly end)
+
+    public async Task<Duty> CreateNewDutyAsync(DateOnly date, TimeOnly start, TimeOnly end)
     {
-        string dutyId = _dutyRepository.GetNewId();
+        string dutyId = await _dutyRepository.GetNewIdAsync();
         var duty = new BusinessDuty(dutyId, date, new WorkTimeRange(start, end), new WorkTask("", ""), DefaultWorkCodeId);
-        _dutyRepository.Register(duty);
+        await _dutyRepository.RegisterAsync(duty);
         return duty;
     }
 
-    public void DeleteDuty(string id)
+    public async Task DeleteDutyAsync(string id)
     {
-        _dutyRepository.Delete(id);
+        await _dutyRepository.DeleteAsync(id);
         DutyDeleted.Invoke(this, EventArgs.Empty);
     }
 
-    public Duty AddNewSchedule(DateOnly date)
+    public async Task<Duty> AddNewScheduleAsync(DateOnly date)
     {
 
         // 9時以降で開いているところに入れる(12時は除く)
@@ -123,7 +130,7 @@ public class SchedulingServive
         TimeOnly end = start.AddMinutes(60);
 
         // その日の中で最後に終わる業務
-        var lastEndTime = this.FindDutiesByDate(targetDate).MaxBy(d => d.EndTime)?.EndTime;
+        var lastEndTime = (await this.FindDutiesByDateAsync(targetDate)).MaxBy(d => d.EndTime)?.EndTime;
         if (lastEndTime != null)
         {
             if (lastEndTime.Value.Hour != 12)
@@ -137,15 +144,16 @@ public class SchedulingServive
             end = start.AddMinutes(60);
         }
 
-        var createdDuty = this.CreateNewDuty(targetDate, start, end);
+        var createdDuty = await this.CreateNewDutyAsync(targetDate, start, end);
         return createdDuty;
     }
 
-    public DutyStaticticResult[]  TakeStatisticsOfSelectedDay()
+    public async Task<DutyStaticticResult[]> TakeStatisticsOfSelectedDayAsync()
     {
-        if (SelectedDate == null) return new DutyStaticticResult[]{};
-        DutiesOfDay dd = new DutiesOfDay(_dutyRepository.FindByDate(this.SelectedDate.Value));
-        return dd.TakeStatistics(_workCodeFamilyRepository);
+        if (SelectedDate == null) return new DutyStaticticResult[] { };
+        var duties = await _dutyRepository.FindByDateAsync(this.SelectedDate.Value);
+        DutiesOfDay dd = new DutiesOfDay(duties);
+        return await dd.TakeStatistics(_workCodeFamilyRepository);
     }
 
     /// <summary>
@@ -155,7 +163,7 @@ public class SchedulingServive
     /// <returns>予定が入っていない時間</returns>
     public IEnumerable<WorkTimeRange> GetFreeTimeSpans(DateOnly date)
     {
-        var mergedRanges = GetMergedTimeRange(FindDutiesByDate(date)).ToArray();
+        var mergedRanges = GetMergedTimeRange(FindDutiesByDateAsync(date).Result).ToArray();
         if (mergedRanges.Length == 0)
         {
             yield return new WorkTimeRange(new TimeOnly(0, 0), new TimeOnly(23, 59));
@@ -214,39 +222,39 @@ public class SchedulingServive
 
     #region ToDoリスト
 
-    public ToDoItem[] FindToDoItemsByDate(DateOnly date)
+    public async Task<ToDoItem[]> FindToDoItemsByDate(DateOnly date)
     {
-        return _toDoRepository.FindByDate(date);
+        return await _toDoRepository.FindByDateAsync(date);
     }
 
-    public ToDoItem CreateNewToDoItem(DateOnly date)
+    public async Task<ToDoItem> CreateNewToDoItem(DateOnly date)
     {
-        string id = _toDoRepository.GetNewId();
+        string id = await _toDoRepository.GetNewIdAsync();
         ToDoItem item = new ToDoItem(id, date, "");
-        _toDoRepository.Register(item);
+        await _toDoRepository.RegisterAsync(item);
         return item;
     }
 
-    public void DeleteToDoItem(string id)
+    public async Task DeleteToDoItem(string id)
     {
-        _toDoRepository.Delete(id);
+        await _toDoRepository.DeleteAsync(id);
     }
 
-    public void UpdateToDoItem(ToDoItem item, object? sender)
+    public async Task UpdateToDoItem(ToDoItem item, object? sender)
     {
-        _toDoRepository.Register(item);
+        await _toDoRepository.RegisterAsync(item);
         ToDoItemChanged?.Invoke(sender, EventArgs.Empty);
     }
 
-    public int MoveTodayOlderTodoItems()
+    public async Task<int> MoveTodayOlderTodoItems()
     {
         int count = 0;
         var today = DateOnly.FromDateTime(DateTime.Now);
-        foreach (ToDoItem item in _toDoRepository.FindItemsBeforeThan(today))
+        foreach (ToDoItem item in await _toDoRepository.FindItemsBeforeThanAsync(today))
         {
-            _toDoRepository.Delete(item.Id);
+            await _toDoRepository.DeleteAsync(item.Id);
             item.DueDate = today;
-            _toDoRepository.Register(item);
+            await _toDoRepository.RegisterAsync(item);
             count++;
         }
 
@@ -255,18 +263,18 @@ public class SchedulingServive
 
     #endregion
 
-    public void SaveAll(IEnumerable<WorkCodeFamily> items)
+    public async Task SaveAll(IEnumerable<WorkCodeFamily> items)
     {
-        _workCodeFamilyRepository.SaveAll(items);
+        await _workCodeFamilyRepository.RegisterAllAsync(items);
     }
 
-    public void RegisterColor(string id, string colorCode)
+    public Task RegisterColorAsync(string id, string colorCode)
     {
-        _dutyColorRepository.Register(id, colorCode);
+        return _dutyColorRepository.RegisterAsync(id, colorCode);
     }
 
-    public string AddNewWorkCodeId()
+    public async Task<string> GetNewWorkCodeIdAsync()
     {
-        return _workCodeFamilyRepository.GetNewId();
+        return await _workCodeFamilyRepository.GetNewIdAsync();
     }
 }

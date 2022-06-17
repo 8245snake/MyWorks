@@ -1,4 +1,6 @@
-﻿@using MyWorkDashboard.Shared.Services
+﻿@namespace MyWorkDashboard.Shared
+
+@using MyWorkDashboard.Shared.Services
 
 @inject SchedulingServive schedulingServive
 @inject PageNavigatingService navigatingService
@@ -27,6 +29,7 @@
         <AntDesign.Col>
             @*ここにメニューボタンとかを出す*@
             <Row Justify="space-around" Gutter="16">
+                
                 <Col>
                     @if (navigatingService.CurrentPage == PageType.Preference)
                     {
@@ -34,13 +37,13 @@
                     }
                     else
                     {
-                        <div  class="top-navbar" @onclick="GoPreference">プリファレンス</div>
+                        <div class="top-navbar" @onclick="GoPreference">プリファレンス</div>
                     }
-                    
+
                 </Col>
-                @*                <Col>
-                    <div style="height: 100%; width: 100px; cursor: pointer;">設定</div>
-                </Col>*@
+
+                <Col><Button Shape="@ButtonShape.Circle" Icon="@IconType.Outline.Bulb" OnClick="() => { LightModeChanged.InvokeAsync(this);}"></Button></Col>
+
             </Row>
         </AntDesign.Col>
     </AntDesign.Row>
@@ -58,11 +61,14 @@
     private DateTime? _dateTime;
     private DatePicker<DateTime?> _datePicker;
 
-    protected override void OnInitialized()
+    [Parameter]
+    public EventCallback LightModeChanged { get; set; }
+
+    protected override async void OnInitialized()
     {
         _dateTime = DateTime.Now;
         var today = DateOnly.FromDateTime(DateTime.Now);
-        schedulingServive.ChangeSelectedDate(today, this);
+        await schedulingServive.ChangeSelectedDateAsync(today, this);
 
         navigatingService.Navigated += OnNavigated;
     }
@@ -73,35 +79,33 @@
 
     }
 
-    private void GoYesterday()
+    private  async Task GoYesterday()
     {
-        ChangeDate(_dateTime.Value.AddDays(-1));
+        await ChangeDate(_dateTime.Value.AddDays(-1));
     }
 
-    private void GoTommorrow()
+    private  async Task GoTommorrow()
     {
-        ChangeDate(_dateTime.Value.AddDays(1));
+        await ChangeDate(_dateTime.Value.AddDays(1));
     }
 
-    private void AddNewSchedule()
+    private async Task AddNewSchedule()
     {
-        var duty = schedulingServive.AddNewSchedule(DateOnly.FromDateTime(_dateTime.Value));
-        schedulingServive.ChangeSelectedDuty(duty, this);
-        schedulingServive.RaiseDutyPropertyChanged(duty);
-        schedulingServive.ChangeSelectedDuty(duty, this);
+        var duty = await schedulingServive.AddNewScheduleAsync(DateOnly.FromDateTime(_dateTime.Value));
+        await schedulingServive.ChangeSelectedDuty(duty, this);
     }
 
 
-    private void OnDateChanged(DateTimeChangedEventArgs e)
+    private async Task OnDateChanged(DateTimeChangedEventArgs e)
     {
-        ChangeDate(e.Date);
+        await ChangeDate(e.Date);
     }
 
-    private void ChangeDate(DateTime datetime)
+    private async Task ChangeDate(DateTime datetime)
     {
-        schedulingServive.ChangeSelectedDuty(null, this);
         _dateTime = datetime;
-        schedulingServive.ChangeSelectedDate(DateOnly.FromDateTime(datetime), this);
+        await schedulingServive.ChangeSelectedDateAsync(DateOnly.FromDateTime(datetime), this);
+        await schedulingServive.ChangeSelectedDuty(null, this);
         StateHasChanged();
     }
 

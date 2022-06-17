@@ -1,4 +1,5 @@
-﻿@using AntDesign
+﻿@namespace MyWorkDashboard.Shared
+
 @using MyWorkDashboard.Shared.Services
 @using MyWorkDashboard.Shared.ToDoTasks
 
@@ -56,8 +57,8 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var count = schedulingServive.MoveTodayOlderTodoItems();
-        ShowTodoItems();
+        var count = await schedulingServive.MoveTodayOlderTodoItems();
+        await ShowTodoItems();
         if (count > 0)
         {
             await notificationService.Open(new NotificationConfig()
@@ -70,33 +71,33 @@ else
         }
     }
 
-    private void ShowTodoItems()
+    private async Task ShowTodoItems()
     {
         _todoItems.Clear();
         if (schedulingServive.SelectedDate != null)
         {
-            _todoItems.AddRange(schedulingServive.FindToDoItemsByDate(schedulingServive.SelectedDate.Value)
+            _todoItems.AddRange((await schedulingServive.FindToDoItemsByDate(schedulingServive.SelectedDate.Value))
                 .Select(CreateViewModel));
         }
     }
 
-    private void OnToDoItemChanged(object? sender, EventArgs e)
+    private async void OnToDoItemChanged(object? sender, EventArgs e)
     {
         if(sender == this) return;
-        ShowTodoItems();
+        await ShowTodoItems();
         StateHasChanged();
     }
 
-    private void OnSelectedDateChanged(object? sender, EventArgs e)
+    private async void OnSelectedDateChanged(object? sender, EventArgs e)
     {
-        ShowTodoItems();
+        await ShowTodoItems();
         this.StateHasChanged();
     }
 
-    private void AddNewItem()
+    private async Task AddNewItem()
     {
         if (schedulingServive.SelectedDate == null) return;
-        var item = schedulingServive.CreateNewToDoItem(schedulingServive.SelectedDate.Value);
+        var item = await schedulingServive.CreateNewToDoItem(schedulingServive.SelectedDate.Value);
         ToDoItemVm vm = CreateViewModel(item);
         _todoItems.Add(vm);
         vm.Select();

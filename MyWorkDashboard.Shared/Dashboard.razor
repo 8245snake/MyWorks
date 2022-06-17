@@ -3,9 +3,21 @@
 
 @inject PageNavigatingService navigatingService
 
+@if (_dark)
+{
+    <link href="_content/AntDesign/css/ant-design-blazor.dark.css" rel="stylesheet" />
+    <link href="_content/MyWorkDashboard.Shared/mywork-color.dark.css" rel="stylesheet" />
+}
+else
+{
+    <link href="_content/AntDesign/css/ant-design-blazor.css" rel="stylesheet" />
+    <link href="_content/MyWorkDashboard.Shared/mywork-color.css" rel="stylesheet" />
+}
+
+
 <Layout>
     <Header Style="position: fixed; z-index: 1; width: 100%;">
-        <TopMenu />
+        <TopMenu LightModeChanged="() => { _dark = !_dark; }"/>
     </Header>
     <Content Style="padding: 0px; margin-top: 50px;">
         @if (navigatingService.CurrentPage == PageType.Home)
@@ -16,12 +28,15 @@
         {
             <PreferencePage/>
         }
-        
+
     </Content>
 </Layout>
 
 @code
 {
+    
+    private bool _dark = false;
+
     protected override void OnInitialized()
     {
         navigatingService.Navigated += OnNavigated;
@@ -31,6 +46,6 @@
     {
         if(sender == this) return;
         StateHasChanged();
-
     }
+
 }
