@@ -2,6 +2,7 @@
 @using MyWorkDashboard.Shared.Pages
 
 @inject PageNavigatingService navigatingService
+@inject UserPreferenceService userPreferenceService
 
 @if (_dark)
 {
@@ -17,7 +18,7 @@ else
 
 <Layout>
     <Header Style="position: fixed; z-index: 1; width: 100%;">
-        <TopMenu LightModeChanged="() => { _dark = !_dark; }"/>
+        <TopMenu LightModeChanged="OnLightModeChanged"/>
     </Header>
     <Content Style="padding: 0px; margin-top: 50px;">
         @if (navigatingService.CurrentPage == PageType.Home)
@@ -40,6 +41,13 @@ else
     protected override void OnInitialized()
     {
         navigatingService.Navigated += OnNavigated;
+        _dark = userPreferenceService.DefaultDarkMode;
+    }
+
+    private void OnLightModeChanged()
+    {
+        _dark = !_dark;
+        userPreferenceService.DefaultDarkMode = _dark;
     }
 
     private void OnNavigated(object? sender, EventArgs e)

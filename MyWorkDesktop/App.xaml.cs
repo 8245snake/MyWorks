@@ -41,7 +41,7 @@ namespace MyWorkDesktop
 
             serviceCollection.AddScoped(sp => new ControlService(new FocusManeger(this.Handle)));
             serviceCollection.AddSingleton<PageNavigatingService>();
-
+            serviceCollection.AddScoped(sp=> new UserPreferenceService(new JsonPreferenceRepository(baseDir)));
             serviceCollection.AddScoped<JsInteropService>();
 
             Resources.Add("services", serviceCollection.BuildServiceProvider());
