@@ -19,6 +19,9 @@ namespace MyWorkDesktop
         {
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddWpfBlazorWebView();
+#if DEBUG
+            serviceCollection.AddBlazorWebViewDeveloperTools();
+#endif
 
             serviceCollection.AddAntDesign();
 

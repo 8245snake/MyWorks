@@ -92,7 +92,7 @@
     private async Task AddNewSchedule()
     {
         var duty = await schedulingServive.AddNewScheduleAsync(DateOnly.FromDateTime(_dateTime.Value));
-        await schedulingServive.ChangeSelectedDuty(duty, this);
+        await schedulingServive.ChangeSelectedDutyAsync(duty, this);
     }
 
 
@@ -105,7 +105,7 @@
     {
         _dateTime = datetime;
         await schedulingServive.ChangeSelectedDateAsync(DateOnly.FromDateTime(datetime), this);
-        await schedulingServive.ChangeSelectedDuty(null, this);
+        await schedulingServive.ChangeSelectedDutyAsync(null, this);
         StateHasChanged();
     }
 

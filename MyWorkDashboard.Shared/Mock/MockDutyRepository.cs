@@ -43,7 +43,9 @@ public class MockDutyRepository : IDutyRepository
 
     public Duty? FindById(string dutyId)
     {
-        Console.WriteLine("FindById");
+#if DEBUG
+        Console.WriteLine($"FindById dutyId={dutyId}");
+#endif
         return _duties.FirstOrDefault(d => d.Id == dutyId);
     }
 

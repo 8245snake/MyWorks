@@ -225,7 +225,7 @@
     private async Task OnDeleteButtonClick()
     {
         await schedulingServive.DeleteDutyAsync(schedulingServive.SelectedDuty.Id);
-        await schedulingServive.ChangeSelectedDuty(null, this);
+        await schedulingServive.ChangeSelectedDutyAsync(null, this);
         await messageService.Info("削除されました", 1);
     }
 
@@ -274,7 +274,7 @@
         var item = await schedulingServive.CreateNewToDoItem(schedulingServive.SelectedDate.Value);
         item.Description = duty.Title;
         await schedulingServive.DeleteDutyAsync(duty.Id);
-        await schedulingServive.ChangeSelectedDuty(null, this);
+        await schedulingServive.ChangeSelectedDutyAsync(null, this);
 
         await schedulingServive.UpdateToDoItem(item, this);
     }

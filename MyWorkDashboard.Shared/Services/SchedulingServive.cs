@@ -60,14 +60,8 @@ public class SchedulingServive
     }
 
 
-    /// <summary>
-    /// <see cref="BusinessDuty"/>のカラーコードを取得する
-    /// </summary>
-    /// <param name="dutyId">検索対象の<see cref="Duty.Id"/></param>
-    /// <returns>Htmlカラーコード</returns>
-    public async Task<string> GetDutyColorCodeAsync(string dutyId)
+    public async Task<string> GetDutyColorCodeAsync(BusinessDuty? duty)
     {
-        BusinessDuty duty = await _dutyRepository.FindByIdAsync(dutyId) as BusinessDuty;
         if (duty == null)
         {
             return "#cccccc";
@@ -80,7 +74,7 @@ public class SchedulingServive
         return _dutyColorRepository.GetHtmlColorCodeById(famulyId);
     }
 
-    public Task ChangeSelectedDuty(Duty duty, object sender)
+    public Task ChangeSelectedDutyAsync(Duty duty, object sender)
     {
         SelectedDuty = duty;
         SelectedDutyChanged?.Invoke(sender, EventArgs.Empty);
@@ -273,8 +267,8 @@ public class SchedulingServive
         return _dutyColorRepository.RegisterAsync(id, colorCode);
     }
 
-    public async Task<string> GetNewWorkCodeIdAsync()
+    public Task<string> GetNewWorkCodeIdAsync()
     {
-        return await _workCodeFamilyRepository.GetNewIdAsync();
+        return _workCodeFamilyRepository.GetNewIdAsync();
     }
 }

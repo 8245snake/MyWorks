@@ -86,7 +86,7 @@
 
     private async void DutiesOnItemSelected(object? sender, DutySelectedEventArgs e)
     {
-        await schedulingServive.ChangeSelectedDuty(e.SelectedDuty, this);
+        await schedulingServive.ChangeSelectedDutyAsync(e.SelectedDuty, this);
         foreach (var bar in _duties.Bars)
         {
             bar.IsSelected = false;
@@ -113,7 +113,7 @@
             {
                 isSelected = ( duty.Id == selectedId);
             }
-            string colorCode = await schedulingServive.GetDutyColorCodeAsync(duty.Id);
+            string colorCode = await schedulingServive.GetDutyColorCodeAsync(duty as BusinessDuty);
             _duties.Add(new DutyBar(duty, 60, colorCode) { IsSelected = isSelected });
         }
     }

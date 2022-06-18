@@ -142,7 +142,7 @@
 
     private async void DutiesOnItemSelected(object? sender, DutySelectedEventArgs e)
     {
-        await schedulingServive.ChangeSelectedDuty(e.SelectedDuty, this);
+        await schedulingServive.ChangeSelectedDutyAsync(e.SelectedDuty, this);
     }
 
 
@@ -162,7 +162,7 @@
             {
                 isSelected = ( duty.Id == selectedId);
             }
-            string colorCode = await schedulingServive.GetDutyColorCodeAsync(duty.Id);
+            string colorCode = await schedulingServive.GetDutyColorCodeAsync(duty as BusinessDuty);
             _duties.Add(new DutyBar(duty, top, bottom - top, colorCode) { IsSelected = isSelected });
         }
     }
@@ -202,7 +202,7 @@
         await ShowTimeBarsAsync(_dateTime.Value);
 
         StateHasChanged();
-        await schedulingServive.ChangeSelectedDuty(createdDuty, new object());
+        await schedulingServive.ChangeSelectedDutyAsync(createdDuty, new object());
     }
 
     public void Dispose()

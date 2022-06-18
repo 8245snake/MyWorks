@@ -31,7 +31,7 @@ public class ToDoItemVm
         Duty created = await _servive.AddNewScheduleAsync(_servive.SelectedDate.Value);
 
         created.Title = Todo.Description;
-        await _servive.ChangeSelectedDuty(created, new object());
+        await _servive.ChangeSelectedDutyAsync(created, new object());
         DeleteTask();
     }
 
