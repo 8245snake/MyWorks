@@ -39,6 +39,8 @@ namespace MyWorkDesktop
             serviceCollection.AddScoped(sp => new ControlService(new FocusManeger(this.Handle)));
             serviceCollection.AddSingleton<PageNavigatingService>();
 
+            serviceCollection.AddScoped<JsInteropService>();
+
             Resources.Add("services", serviceCollection.BuildServiceProvider());
 
             this.DispatcherUnhandledException += OnDispatcherUnhandledException;

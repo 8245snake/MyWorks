@@ -15,6 +15,7 @@ builder.Services.AddScoped(sp => new SchedulingServive(
     new MockToDoRepository()));
 builder.Services.AddScoped(sp => new ControlService(null));
 builder.Services.AddSingleton<PageNavigatingService>();
+builder.Services.AddSingleton<JsInteropService>();
 
 builder.Services.AddAntDesign();
 

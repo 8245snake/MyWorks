@@ -6,11 +6,13 @@
 @implements IDisposable
 
 @inject SchedulingServive schedulingServive
+@inject JsInteropService jsInteropService
+@inject MessageService messageService
 
 <div style="height: 100%; width: 100%;" @oncontextmenu:stopPropagation @oncontextmenu:preventDefault>
 
     <Row Style="height: 100%;">
-        <div class="schedule-area schedule-area-color">
+        <div id="schedule-frame" class="schedule-area schedule-area-color">
             
             @foreach (TimeRow row in _rows.Rows)
             {
@@ -77,9 +79,24 @@
         schedulingServive.SelectedDateChanged += OnSelectedDateChanged;
         _duties.ItemSelected += DutiesOnItemSelected;
 
-        await ShowTimeBarsAsync(_dateTime.Value);
-        StateHasChanged();
+        try
+        {
+            await ShowTimeBarsAsync(_dateTime.Value);
+            StateHasChanged();
+
+            // スクロールする。DOMが生成されていないことがあったので少し遅延して実行する。
+            Timer timer = new Timer(o =>
+            {
+                jsInteropService.ScrollScheduleFrame(400);
+            }, null, 1, Timeout.Infinite);
+
+        }
+        catch (Exception e)
+        {
+            await messageService.Error(e.Message);
+        }
     }
+
 
     private async void TimeRowOnSelected(object? sender, TimeRowSelectEventArgs e)
     {
