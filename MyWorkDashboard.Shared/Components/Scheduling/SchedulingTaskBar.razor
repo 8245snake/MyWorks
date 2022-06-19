@@ -10,7 +10,6 @@
 
 <style>
     .time-bar {
-        width: calc(95% - @(DutyBar.TimeWidth)px);
         position: absolute;
         cursor: pointer;
         overflow: hidden;
@@ -34,11 +33,11 @@
 
 
     private RenderFragment GetBarPopupContent(DutyBar bar) =>
-        @<div>
-            @foreach (var line in bar.Duty.Description.Split('\n'))
+    @<div>
+                    @foreach (var line in bar.Duty.Description.Split('\n'))
             {
-                @line<br/>
+                        @line<br/>
             }
-        </div>;
+    </div>;
 
 }

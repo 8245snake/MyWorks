@@ -13,18 +13,18 @@
 
     <Row Style="height: 100%;">
         <div id="schedule-frame" class="schedule-area schedule-area-color">
-            
+
             @foreach (TimeRow row in _rows.Rows)
             {
                 <div class="time-row" style="@($"top:{row.RowTopPosition}px;")" @onclick="@row.OnClick">
                     <div class="time-row-item time-label">
                         @(row.Time.ToString())
                     </div>
-                    <div class="time-row-item time-border time-border-color" >
+                    <div class="time-row-item time-border time-border-color">
                     </div>
                 </div>
             }
-            
+
             @foreach (DutyBar bar in _duties.Bars)
             {
                 <SchedulingTaskBar BarModel="bar"></SchedulingTaskBar>
@@ -105,14 +105,14 @@
 
     private async void OnSelectedDateChanged(object? sender, EventArgs e)
     {
-        if(sender == this) return;
+        if (sender == this) return;
         await ShowTimeBarsAsync(_dateTime.Value);
         StateHasChanged();
     }
 
     private async void OnSelectedDutyChanged(object? sender, EventArgs e)
     {
-        if(sender == this) return;
+        if (sender == this) return;
 
         if (schedulingServive.SelectedDuty != null)
         {
@@ -135,7 +135,7 @@
 
     private async void OnPropertyChanged(object? sender, EventArgs e)
     {
-        if(sender == this) return;
+        if (sender == this) return;
         await ShowTimeBarsAsync(_dateTime.Value);
         StateHasChanged();
     }
@@ -145,25 +145,38 @@
         await schedulingServive.ChangeSelectedDutyAsync(e.SelectedDuty, this);
     }
 
-
+    /// <summary>
+    /// タイムラインのバーモデルを構築する
+    /// </summary>
+    /// <param name="date">日付</param>
     private async Task ShowTimeBarsAsync(DateOnly date)
     {
-        // 選択中のIDを覚えておく
-        var selectedId = _duties.Bars.FirstOrDefault(d => d.IsSelected)?.Duty.Id;
-
-        _duties.Clear();
-        var duties = await schedulingServive.FindDutiesByDateAsync(date);
-        foreach (Duty duty in duties)
+        try
         {
-            int top = _rows.TimeToPixel(duty.StartTime);
-            int bottom = _rows.TimeToPixel(duty.EndTime);
-            bool isSelected = false;
-            if (!string.IsNullOrWhiteSpace(selectedId))
+            // 選択中のIDを覚えておく
+            var selectedId = _duties.Bars.FirstOrDefault(d => d.IsSelected)?.Duty.Id;
+
+            _duties.Clear();
+            var duties = await schedulingServive.FindDutiesByDateAsync(date);
+            foreach (Duty duty in duties)
             {
-                isSelected = ( duty.Id == selectedId);
+                int top = _rows.TimeToPixel(duty.StartTime);
+                int bottom = _rows.TimeToPixel(duty.EndTime);
+                bool isSelected = false;
+                if (!string.IsNullOrWhiteSpace(selectedId))
+                {
+                    isSelected = (duty.Id == selectedId);
+                }
+                string colorCode = await schedulingServive.GetDutyColorCodeAsync(duty as BusinessDuty);
+                _duties.Add(new DutyBar(duty, top, bottom - top, colorCode) { IsSelected = isSelected });
             }
-            string colorCode = await schedulingServive.GetDutyColorCodeAsync(duty as BusinessDuty);
-            _duties.Add(new DutyBar(duty, top, bottom - top, colorCode) { IsSelected = isSelected });
+
+            // 多重度計算
+            _duties.CalculateMultiplicity();
+        }
+        catch (Exception e)
+        {
+            await messageService.Error(e.Message);
         }
     }
 
@@ -181,7 +194,7 @@
         TimeOnly start = selectedTimeBlock;
         TimeOnly end = selectedTimeBlock.AddMinutes(defaultSpanMinute);
         DateOnly date = _dateTime.Value;
-        
+
         // 指定した時刻を含む空き時間を検索する
         var ranges = schedulingServive.GetFreeTimeSpans(date).ToArray();
         WorkTimeRange? freeTimeRange = ranges.LastOrDefault(range => range.Contains(start) || range.Contains(end));
