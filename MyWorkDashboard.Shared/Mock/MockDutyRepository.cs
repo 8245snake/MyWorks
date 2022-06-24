@@ -27,6 +27,7 @@ public class MockDutyRepository : IDutyRepository
 
     public void Register(Duty duty)
     {
+        Utility.Log(duty);
         // todo 時刻のかぶりチェック
         this.Delete(duty.Id);
         _duties.Add(duty);

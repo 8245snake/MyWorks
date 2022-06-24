@@ -78,16 +78,18 @@
         schedulingServive.DutyPropertyChanged += OnPropertyChanged;
         schedulingServive.SelectedDateChanged += OnSelectedDateChanged;
         _duties.ItemSelected += DutiesOnItemSelected;
+        _duties.ItemDropped += DutiesOnItemDropped;
 
         try
         {
-            await ShowTimeBarsAsync(_dateTime.Value);
-            StateHasChanged();
+            await CreateTimeBarsAsync(_dateTime.Value);
+            await InvokeAsync(StateHasChanged);
 
             // スクロールする。DOMが生成されていないことがあったので少し遅延して実行する。
-            Timer timer = new Timer(o =>
+            Timer timer = new Timer(async o =>
             {
-                jsInteropService.ScrollScheduleFrame(400);
+                await jsInteropService.ScrollScheduleFrame(400);
+                await InvokeAsync(StateHasChanged);
             }, null, 1, Timeout.Infinite);
 
         }
@@ -106,8 +108,8 @@
     private async void OnSelectedDateChanged(object? sender, EventArgs e)
     {
         if (sender == this) return;
-        await ShowTimeBarsAsync(_dateTime.Value);
-        StateHasChanged();
+        await CreateTimeBarsAsync(_dateTime.Value);
+        await InvokeAsync(StateHasChanged);
     }
 
     private async void OnSelectedDutyChanged(object? sender, EventArgs e)
@@ -120,36 +122,53 @@
             if (selectedBar == null)
             {
                 // 新規追加されている可能性があるので再チャレンジ
-                await ShowTimeBarsAsync(_dateTime.Value);
+                await CreateTimeBarsAsync(_dateTime.Value);
                 selectedBar = _duties.Bars.FirstOrDefault(bar => bar.Duty.Id == schedulingServive.SelectedDuty.Id);
             }
 
             if (selectedBar != null)
             {
-                selectedBar.OnClick.Invoke(new MouseEventArgs());
+                selectedBar.OnClick(new MouseEventArgs());
             }
         }
-        await ShowTimeBarsAsync(_dateTime.Value);
-        StateHasChanged();
+        await CreateTimeBarsAsync(_dateTime.Value);
+        await InvokeAsync(StateHasChanged);
     }
 
     private async void OnPropertyChanged(object? sender, EventArgs e)
     {
         if (sender == this) return;
-        await ShowTimeBarsAsync(_dateTime.Value);
-        StateHasChanged();
+        await CreateTimeBarsAsync(_dateTime.Value);
+        await InvokeAsync(StateHasChanged);
     }
 
-    private async void DutiesOnItemSelected(object? sender, DutySelectedEventArgs e)
+    private async void DutiesOnItemSelected(object? sender, DutyBarEventArgs e)
     {
-        await schedulingServive.ChangeSelectedDutyAsync(e.SelectedDuty, this);
+        await schedulingServive.ChangeSelectedDutyAsync(e.DutyBar.Duty, this);
+        //await InvokeAsync(StateHasChanged);
+        foreach (DutyBar bar in _duties.Bars)
+        {
+            bar.Redraw();
+        }
+    }
+
+    private async void DutiesOnItemDropped(object? sender, DutyBarEventArgs e)
+    {
+        var newStartTime = _rows.PixelToTime((int)e.DutyBar.Top);
+        Utility.Log(newStartTime);
+
+        Duty duty = e.DutyBar.Duty;
+        duty.Shift(newStartTime);
+        await schedulingServive.ChangeSelectedDutyAsync(duty, this);
+        await schedulingServive.RaiseDutyPropertyChangedAsync(null);
+        await InvokeAsync(StateHasChanged);
     }
 
     /// <summary>
     /// タイムラインのバーモデルを構築する
     /// </summary>
     /// <param name="date">日付</param>
-    private async Task ShowTimeBarsAsync(DateOnly date)
+    private async Task CreateTimeBarsAsync(DateOnly date)
     {
         try
         {
@@ -168,7 +187,7 @@
                     isSelected = (duty.Id == selectedId);
                 }
                 string colorCode = await schedulingServive.GetDutyColorCodeAsync(duty as BusinessDuty);
-                _duties.Add(new DutyBar(duty, top, bottom - top, colorCode) { IsSelected = isSelected });
+                _duties.Add(new DutyBar(duty, top, bottom - top, colorCode, _rows) { IsSelected = isSelected });
             }
 
             // 多重度計算
@@ -212,9 +231,9 @@
         }
 
         Duty createdDuty = await schedulingServive.CreateNewDutyAsync(date, start, end);
-        await ShowTimeBarsAsync(_dateTime.Value);
+        await CreateTimeBarsAsync(_dateTime.Value);
 
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
         await schedulingServive.ChangeSelectedDutyAsync(createdDuty, new object());
     }
 
@@ -225,6 +244,7 @@
         schedulingServive.DutyPropertyChanged -= OnPropertyChanged;
         schedulingServive.SelectedDateChanged -= OnSelectedDateChanged;
         _duties.ItemSelected -= DutiesOnItemSelected;
+        _duties.ItemSelected -= DutiesOnItemDropped;
         _duties.Clear();
     }
 

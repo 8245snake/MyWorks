@@ -1,51 +1,17 @@
 ﻿@page "/"
-@using MyWorkDashboard.Shared
 
 
-<SortableContainer TItem="ViewItem" Items="items" @ref="_container" SelectedStyle="background-color: red;">
-    <ItemTemplate>
-        あああ @context.Name
-    </ItemTemplate>
-</SortableContainer>
-
-
-<Button OnClick="GoUp">上</Button>
-<Button OnClick="GoDown">下</Button>
-
-<DraggablePanel >
-    <div style="height: 50px; width: 100px; background-color: aquamarine;"></div>
+<DraggablePanel GrabbingDelay="200" Moved="Callback">
+    <div Top="200" style="height: 50px; width: 100px; background-color: red;"></div>
 </DraggablePanel>
 
+<DraggablePanel GrabbingDelay="200" Moved="Callback">
+    <div Top="200" style="height: 50px; width: 100px; background-color: blue;"></div>
+</DraggablePanel>
 
 @code {
-
-    SortableContainer<ViewItem> _container;
-
-    ViewItem[] items = new ViewItem[] { 
-        new ViewItem("項目1") 
-        , new ViewItem("項目2")
-        , new ViewItem("項目3")
-        , new ViewItem("項目4")
-    };
-
-    private void GoUp()
+    private void Callback()
     {
-        _container.Up();
-        var arr = _container.SortedItems;
-    }
-
-    private void GoDown()
-    {
-        _container.Down();
-    }
-
-    class ViewItem
-    {
-        public string Name { get; set; }
-
-        public ViewItem(string name)
-        {
-            Name = name;
-        }
+        Console.WriteLine("move");   
     }
 }

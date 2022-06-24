@@ -1,17 +1,28 @@
 ﻿@namespace MyWorkDashboard.Shared
 @using System.Timers
+@using System.Diagnostics
 
 @implements IAsyncDisposable
 
-<div class="@_design" style=@($"top: {Y}px; left: {X}px;") @onmousedown="OnMouseDown" @onmouseup="OnMouseUp">
+@if (_isGrabbing)
+{
+    <div class="drag-target" @onmouseup="OnMouseUp" @onmousemove="OnMouseMove" @onmouseout="OnMouseOut" >
+    </div>
+}
+
+<div class="@($"{_design} {Class}")" style=@($"top: {Y}px; left: {X}px; {Style}") 
+     @onclick="OnClick"
+     @onmousedown="OnMouseDownHandler" 
+     @onmouseup="OnMouseUp">
     @ChildContent
 </div>
 
 @if (_isGrabbing)
 {
-    <div class="drag-target" @onmouseup="OnMouseUp" @onmousemove="OnMouseMove">
+    <div class="drag-target" @onmouseup="OnMouseUp" @onmousemove="OnMouseMove" @onmouseout="OnMouseOut" >
     </div>
 }
+
 
 <style>
     .draggable-panel {
@@ -21,8 +32,6 @@
 
     .panel-grabbing {
         cursor: grabbing;
-        box-shadow: 1px 1px 12px rgba(0,0,0,.65);
-        
         z-index: 999;
     }
 
@@ -34,7 +43,9 @@
         width: 100vw;
         z-index: 1000;
         cursor: grabbing;
+        @(GrayBack())
     }
+
 
 </style>
 
@@ -45,13 +56,57 @@
     public RenderFragment ChildContent { get; set; }
 
     [Parameter]
-    public EventCallback<object> Moved { get; set; }
+    public EventCallback<MouseEventArgs> BeginDrag { get; set; }
 
     [Parameter]
-    public double X { get; set; }
+    public EventCallback<MouseEventArgs> Drop { get; set; }
 
     [Parameter]
-    public double Y { get; set; }
+    public EventCallback<MouseEventArgs> OnClick { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnMouseDown { get; set; }
+
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> Moved { get; set; }
+
+    [Parameter]
+    public double X
+    {
+        get => _x;
+        set
+        {
+            if (_x != value)
+            {
+                _x = value;
+                XChanged.InvokeAsync(_x);
+            }
+        }
+    }
+    private double _x;
+
+    [Parameter]
+    public EventCallback<double> XChanged { get; set; }
+
+    [Parameter]
+    public double Y
+    {
+        get => _y;
+        set
+        {
+            if (_y != value)
+            {
+                _y = value;
+                YChanged.InvokeAsync(_y);
+            }
+        }
+    }
+    private double _y;
+
+    [Parameter]
+    public EventCallback<double> YChanged { get; set; }
+
 
     [Parameter]
     public bool FixX { get; set; }
@@ -61,6 +116,12 @@
 
     [Parameter]
     public int GrabbingDelay { get; set; }
+
+    [Parameter]
+    public string? Style { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
 
     Timer _timer;
 
@@ -72,7 +133,7 @@
             string design = "draggable-panel";
             if (_isGrabbing)
             {
-                design += " panel-grabbing";
+                design += " panel-grabbing panel-grabbing-color";
             }
             return design;
         }
@@ -83,65 +144,96 @@
         if (GrabbingDelay > 0)
         {
             _timer = new Timer(GrabbingDelay) { AutoReset = false };
+            _timer.Elapsed += TimerOnElapsed;
         }
     }
-
+    private double deltaX;
+    private double deltaY;
     private double lastX;
     private double lastY;
 
-    private void OnMouseDown(MouseEventArgs e)
+    private bool isTimerWaiting = false;
+
+
+    private async Task OnMouseDownHandler(MouseEventArgs e)
     {
+        await OnMouseDown.InvokeAsync(e);
+
         if (GrabbingDelay > 0)
         {
-            _timer.Elapsed -= TimerOnElapsed;
-            _timer.Elapsed += TimerOnElapsed;
             _timer.Start();
+            isTimerWaiting = true;
+            _isGrabbing = false;
         }
         else
         {
             _isGrabbing = true;
+            deltaX = 0;
+            deltaY = 0;
+            await BeginDrag.InvokeAsync(e);
         }
 
         lastX = e.ScreenX;
         lastY = e.ScreenY;
-    }
-
-    private void TimerOnElapsed(object? sender, ElapsedEventArgs e)
-    {
-        _timer.Elapsed -= TimerOnElapsed;
-        _timer.Stop();
-        _isGrabbing = true;
-        StateHasChanged();
 
     }
 
-    private void OnMouseUp()
+    private async void TimerOnElapsed(object? sender, ElapsedEventArgs e)
     {
-        _isGrabbing = false;
+        if (isTimerWaiting)
+        {
+            _timer.Stop();
+            _isGrabbing = true;
+            isTimerWaiting = false;
+            deltaX = 0;
+            deltaY = 0;
+            await InvokeAsync(StateHasChanged);
+            await BeginDrag.InvokeAsync(null);
+        }
+
+    }
+
+    private async Task OnMouseUp(MouseEventArgs e)
+    {
         if (GrabbingDelay > 0)
         {
             _timer.Stop();
-            _timer.Elapsed -= TimerOnElapsed;
         }
+        
+        isTimerWaiting = false;
+        _isGrabbing = false;
+
+        if (Math.Abs(deltaX) > 0 || Math.Abs(deltaY) > 0)
+        {
+            // 移動していたらDropを発火する
+            await Drop.InvokeAsync(e);
+        }
+
+        deltaX = 0;
+        deltaY = 0;
     }
 
-
-    private void OnMouseMove(MouseEventArgs e)
+    private async Task OnMouseMove(MouseEventArgs e)
     {
         if (!_isGrabbing) return;
 
-        if (!FixY)
-        {
-            Y += e.ScreenY - lastY;
-            lastY = e.ScreenY;
-        }
-
         if (!FixX)
         {
-            X += e.ScreenX - lastX;
+            var delta = e.ScreenX - lastX;
+            deltaX += delta;
+            X += delta;
             lastX = e.ScreenX;
         }
 
+        if (!FixY)
+        {
+            var delta = e.ScreenY - lastY;
+            deltaY += delta;
+            Y += delta;
+            lastY = e.ScreenY;
+        }
+
+        await Moved.InvokeAsync(e);
     }
 
     public ValueTask DisposeAsync()
@@ -152,4 +244,17 @@
         return ValueTask.CompletedTask;
     }
 
+    private void OnMouseOut()
+    {
+        isTimerWaiting = false;
+    }
+
+
+    private string GrayBack()
+    {
+#if dummy
+        return "background-color: gray; opacity: 0.1;";
+#endif
+        return "";
+    }
 }

@@ -32,4 +32,15 @@ public class TimeRowCollection
         int offset = time.Minute * _pixelByMinute;
         return nearyTime.RowTopPosition + offset;
     }
+
+    public TimeOnly PixelToTime(int pixcel, int accuracy = 10)
+    {
+        TimeOnly time = new TimeOnly(0, 0, 0);
+        var minute = pixcel / _pixelByMinute;
+        // 切り捨てる
+        var syo = minute / accuracy;
+        minute = syo * accuracy;
+        time = time.AddMinutes(minute);
+        return time;
+    }
 }

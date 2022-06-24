@@ -84,20 +84,19 @@
         StateHasChanged();
     }
 
-    private async void DutiesOnItemSelected(object? sender, DutySelectedEventArgs e)
+    private async void DutiesOnItemSelected(object? sender, DutyBarEventArgs e)
     {
-        await schedulingServive.ChangeSelectedDutyAsync(e.SelectedDuty, this);
+        await schedulingServive.ChangeSelectedDutyAsync(e.DutyBar.Duty, this);
         foreach (var bar in _duties.Bars)
         {
             bar.IsSelected = false;
-            if (e.SelectedDuty == bar.Duty)
+            if (e.DutyBar.Duty == bar.Duty)
             {
                 bar.IsSelected = true;
             }
         }
         StateHasChanged();
     }
-
 
     private async Task ShowTimeBarsAsync(DateOnly date)
     {
@@ -123,6 +122,8 @@
         schedulingServive.SelectedDutyChanged -= OnSelectedDutyChanged;
         schedulingServive.DutyPropertyChanged -= OnPropertyChanged;
         schedulingServive.SelectedDateChanged -= OnSelectedDateChanged;
-        _duties.ItemSelected -= DutiesOnItemSelected;    }
+        _duties.ItemSelected -= DutiesOnItemSelected;
+
+    }
 
 }

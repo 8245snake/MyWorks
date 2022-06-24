@@ -40,10 +40,15 @@
         opacity: 1.0;
     }
 
+
+.panel-grabbing-color {
+    box-shadow: 3px 3px 12px rgba(255,255,255,.65);
+}
+
 /*選択中のバー*/
 .bar-selected-color {
     opacity: 1.0;
-    border: 3px white solid;
+    border: 1px white solid;
 }
 
 /*リスト表示のバー*/

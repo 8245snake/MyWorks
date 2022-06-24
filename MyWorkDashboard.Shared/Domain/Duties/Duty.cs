@@ -49,4 +49,12 @@ public abstract class Duty
     {
         return _timeRange.Contains(time);
     }
+
+
+    public void Shift(TimeOnly start)
+    {
+        var minutes = (EndTime - StartTime).TotalMinutes;
+        StartTime = start;
+        EndTime = StartTime.AddMinutes(minutes);
+    }
 }

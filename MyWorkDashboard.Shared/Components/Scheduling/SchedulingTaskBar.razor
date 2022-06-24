@@ -1,17 +1,21 @@
 ﻿@using System.ComponentModel.DataAnnotations
+@using System.Diagnostics
+@using System.Runtime.CompilerServices
+@using System.Security.Cryptography
 @namespace MyWorkDashboard.Shared
+@implements IDisposable
 
 @*本文がない場合はポップアップを出さない*@
-<Popover Disabled="@(string.IsNullOrWhiteSpace(BarModel.Duty.Description))" Placement="@Placement.Right" TitleTemplate="@GetBarPopupTitle(BarModel)" ContentTemplate="@GetBarPopupContent(BarModel)" Trigger="@(new[] {AntDesign.Trigger.Hover})">
-    <div class="time-bar time-bar-color @BarModel.AdditionalClass" style="@BarModel.BarStyle" @onclick="BarModel.OnClick" >
-        <p class="bar-text">@(BarModel.Duty.StartTime)～@(BarModel.Duty.EndTime)  @BarModel.Duty.Title</p>
+<DraggablePanel @bind-Y="@BarModel.Top" Style="@BarModel.BarStyle" Class="@($"time-bar time-bar-color {BarModel.AdditionalClass}")" 
+                FixX GrabbingDelay="500" OnMouseDown="@BarModel.OnClick" Drop="@BarModel.OnDrop" Moved="Moved">
+    <div>
+        <p class="bar-text">@(BarModel.Duty.StartTime)～@(BarModel.Duty.EndTime) @BarModel.Duty.Title</p>
     </div>
-</Popover>
+</DraggablePanel>
 
 <style>
     .time-bar {
         position: absolute;
-        cursor: pointer;
         overflow: hidden;
     }
 
@@ -29,15 +33,33 @@
     [Parameter, Required]
     public DutyBar BarModel { get; set; }
 
-    private RenderFragment GetBarPopupTitle(DutyBar bar) => @<p>@bar.Duty.Title</p>;
+    protected override void OnParametersSet()
+    {
+        BarModel.RedrawInvoked -= OnRedrawInvoked;
+        BarModel.RedrawInvoked += OnRedrawInvoked;
+    }
 
 
-    private RenderFragment GetBarPopupContent(DutyBar bar) =>
-    @<div>
-                    @foreach (var line in bar.Duty.Description.Split('\n'))
-            {
-                        @line<br/>
-            }
-    </div>;
+    private void OnRedrawInvoked(object? sender, EventArgs e)
+    {
+        StateHasChanged();
+    }
+
+
+    public void Dispose()
+    {
+        BarModel.RedrawInvoked -= OnRedrawInvoked;
+    }
+
+    private void Moved()
+    {
+        if (BarModel.TimeRows != null)
+        {
+            var start = BarModel.TimeRows.PixelToTime((int)BarModel.Top);
+            BarModel.Duty.Shift(start);
+        }
+    }
 
 }
+
+
