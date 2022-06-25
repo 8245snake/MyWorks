@@ -2,25 +2,37 @@
 
 @using MyWorkDashboard.Shared.Duties
 @using System.ComponentModel.DataAnnotations
+@using System.ComponentModel.Design.Serialization
 @using System.Dynamic
 @using MyWorkDashboard.Shared.Services
 
 @inject SchedulingServive schedulingServive
+@inject ClipboardService clipboardService
+@inject MessageService messageService
 
-<div class="task-list-bar task-list-bar-color @SelectedStyle" @onclick="e => { OnSelected.InvokeAsync(e);}">
-    <div class="task-color-label" style=@($"background-color: {ColorCode};")></div>
-    <div class="task-color-content">
-        <div class="bar-top">
-            <p style="max-width: 40%; white-space: nowrap;" class="bar-titile">@(Duty.StartTime)～@(Duty.EndTime) (@(_timeSpanText))</p>
-            <p style="font-size: 10px; max-width: 60%; white-space: nowrap; overflow: hidden;">@_workCodetext</p>
+
+
+<Dropdown  Trigger="new Trigger[] { Trigger.ContextMenu }" @ref="_dropDown" Style="width:100%; display: block;" >
+    <Overlay>
+        <Menu SelectedKeys="new string[]{}">
+            <MenuItem Icon="@IconType.Outline.Copy" OnClick="Copy">コピー</MenuItem>
+        </Menu>
+    </Overlay>
+    <ChildContent>
+        <div class="task-list-bar task-list-bar-color @SelectedStyle" @onclick="e => { OnSelected.InvokeAsync(e); }">
+            <div class="task-color-label" style=@($"background-color: {ColorCode};")></div>
+            <div class="task-color-content">
+                <div class="bar-top">
+                    <p style="max-width: 40%; white-space: nowrap;" class="bar-titile">@(Duty.StartTime)～@(Duty.EndTime) (@(_timeSpanText))</p>
+                    <p style="font-size: 10px; max-width: 60%; white-space: nowrap; overflow: hidden;">@_workCodetext</p>
+                </div>
+
+                <p class="bar-titile">@Duty.Title</p>
+                <p class="bar-description">@Duty.Description</p>
+            </div>
         </div>
-        
-        <p class="bar-titile">@Duty.Title</p>
-        <p class="bar-description">@Duty.Description</p>
-    </div>
-    
-</div>
-
+    </ChildContent>
+</Dropdown>
 
 <style>
 
@@ -78,6 +90,8 @@
     [Parameter]
     public EventCallback<MouseEventArgs> OnSelected { get; set; }
 
+    private Dropdown _dropDown;
+
     private string _workCodetext
     {
         get
@@ -99,6 +113,13 @@
     }
 
     private string SelectedStyle => this.Selected ? "list-selected-color" : "";
-
+    
+    
+    private async void Copy()
+    {
+        _dropDown.SetVisible(false);
+        clipboardService.Copy(Duty);
+        await messageService.Info("タスクをコピーしました");
+    }
 
 }

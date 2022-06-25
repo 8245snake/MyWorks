@@ -1,0 +1,54 @@
+﻿@using MyWorkDashboard.Shared.Services
+
+@namespace MyWorkDashboard.Shared
+
+@inject ClipboardService clipboardService
+
+
+<Tooltip Placement="@Placement.Bottom" Title="_tooltip">
+    <Icon Type="copy" Theme="outline" Class=@($"copy-icon {classname}") />
+</Tooltip>
+
+<style>
+    .copy-icon {
+        margin-left: 30px;
+        font-size: 25px;
+    }
+
+    .copy-enabled-color {
+        color: #1890ff;
+    }
+
+</style>
+
+@code {
+
+    private RenderFragment _tooltip => @<div>
+                                           @if (clipboardService.Duty == null)
+                                           {
+                                               <p>クリップボードは空です</p>
+                                           }
+                                           else
+                                           {
+                                               <p>@clipboardService.Duty.Title</p>
+                                               <p>@clipboardService.Duty.Description</p>
+                                               
+                                           }
+
+        </div>;
+
+    private string classname => clipboardService.Duty != null ? "copy-enabled-color" : "";
+
+    protected override void OnInitialized()
+    {
+        clipboardService.ClipboardChanged += OnClipboardChanged;
+    }
+
+    private void OnClipboardChanged(object? sender, EventArgs e)
+    {
+        StateHasChanged();
+    }
+
+
+
+}

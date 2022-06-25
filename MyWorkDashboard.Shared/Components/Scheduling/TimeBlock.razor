@@ -1,0 +1,75 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using MyWorkDashboard.Shared.Services
+@namespace MyWorkDashboard.Shared
+
+@inject ClipboardService clipboardService
+
+<Dropdown  Trigger="new Trigger[] { Trigger.ContextMenu }" @ref="_dropDown">
+    <Overlay>
+        <Menu SelectedKeys="new string[]{}">
+            <MenuItem Icon="@IconType.Outline.FileAdd" OnClick="AddNew">新規追加</MenuItem>
+            @if (clipboardService.Duty != null)
+            {
+                <MenuItem Icon="@IconType.Outline.Copy" OnClick="Paste">貼り付け</MenuItem>
+            }
+        </Menu>
+    </Overlay>
+    <Unbound>
+        <div @ref="@context.Current" class="time-row" style="@($"top:{Model.RowTopPosition}px;")" @oncontextmenu:preventDefault>
+            <div class="time-row-item time-label">
+                @(Model.Time.ToString())
+            </div>
+            <div class="time-row-item time-border time-border-color">
+            </div>
+        </div>
+    </Unbound>
+</Dropdown>
+
+<style>
+    .time-row {
+        height: @(TimeRowCollection.RowHeight)px;
+        width: 100%;
+        position: absolute;
+        overflow: hidden;
+    }
+
+    .time-row-item {
+        float: left;
+    }
+
+    .time-label {
+        width: @(DutyBar.TimeWidth)px;
+    }
+
+    .time-border {
+        width: calc(100% - @(DutyBar.TimeWidth)px);
+        height: 100%;
+    }
+</style>
+
+@code {
+
+    Dropdown _dropDown;
+
+    [Parameter, Required]
+    public TimeRow Model { get; set; }
+
+    [Parameter]
+    public EventCallback<TimeRow> OnAddNew{ get; set; }
+
+    [Parameter]
+    public EventCallback<TimeRow> OnPaste{ get; set; }
+
+    private async Task AddNew()
+    {
+        _dropDown?.SetVisible(false);
+        await OnAddNew.InvokeAsync(Model);
+    }
+
+    private async Task Paste()
+    {
+        _dropDown?.SetVisible(false);
+        await OnPaste.InvokeAsync(Model);
+    }
+
+}

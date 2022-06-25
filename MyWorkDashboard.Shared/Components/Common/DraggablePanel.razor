@@ -11,9 +11,10 @@
 }
 
 <div class="@($"{_design} {Class}")" style=@($"top: {Y}px; left: {X}px; {Style}") 
-     @onclick="OnClick"
+     @onclick="(e) => { OnClick.InvokeAsync(e);}"
      @onmousedown="OnMouseDownHandler" 
-     @onmouseup="OnMouseUp">
+     @onmouseup="OnMouseUp"
+     @ref="RefBack.Current">
     @ChildContent
 </div>
 
@@ -51,6 +52,8 @@
 
 
 @code {
+    [Parameter]
+    public ForwardRef RefBack { get; set; } = new ForwardRef();
 
     [Parameter]
     public RenderFragment ChildContent { get; set; }
@@ -157,25 +160,29 @@
 
     private async Task OnMouseDownHandler(MouseEventArgs e)
     {
+
+        if (e.Button == 0) //左クリックのみ対応
+        {
+            if (GrabbingDelay > 0)
+            {
+                _timer.Start();
+                isTimerWaiting = true;
+                _isGrabbing = false;
+            }
+            else
+            {
+                _isGrabbing = true;
+                deltaX = 0;
+                deltaY = 0;
+                await BeginDrag.InvokeAsync(e);
+            }
+
+            lastX = e.ScreenX;
+            lastY = e.ScreenY;
+
+        }
+
         await OnMouseDown.InvokeAsync(e);
-
-        if (GrabbingDelay > 0)
-        {
-            _timer.Start();
-            isTimerWaiting = true;
-            _isGrabbing = false;
-        }
-        else
-        {
-            _isGrabbing = true;
-            deltaX = 0;
-            deltaY = 0;
-            await BeginDrag.InvokeAsync(e);
-        }
-
-        lastX = e.ScreenX;
-        lastY = e.ScreenY;
-
     }
 
     private async void TimerOnElapsed(object? sender, ElapsedEventArgs e)
@@ -195,6 +202,8 @@
 
     private async Task OnMouseUp(MouseEventArgs e)
     {
+        if(e.Button != 0) return;
+
         if (GrabbingDelay > 0)
         {
             _timer.Stop();
@@ -252,7 +261,7 @@
 
     private string GrayBack()
     {
-#if dummy
+#if DEBUG
         return "background-color: gray; opacity: 0.1;";
 #endif
         return "";

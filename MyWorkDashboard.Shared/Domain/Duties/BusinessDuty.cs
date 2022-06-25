@@ -10,4 +10,9 @@ public class BusinessDuty : Duty
     {
         this.WorkCodeFamilyId = workCodeFamilyId;
     }
+
+    public override Duty Duplicate(string newId)
+    {
+        return new BusinessDuty(newId, Date, this._timeRange.DeepCopy(), _workTask.DeepCopy(), this.WorkCodeFamilyId);
+    }
 }

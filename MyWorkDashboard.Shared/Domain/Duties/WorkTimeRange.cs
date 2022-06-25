@@ -24,6 +24,11 @@ public class WorkTimeRange
         return StartTime <= time && time <= EndTime;
     }
 
+    public WorkTimeRange DeepCopy()
+    {
+        return new WorkTimeRange(this.StartTime, this.EndTime);
+    }
+
     public override string ToString()
     {
         return $"{StartTime}~{EndTime}";

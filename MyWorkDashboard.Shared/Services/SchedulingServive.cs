@@ -100,10 +100,21 @@ public class SchedulingServive
     }
 
 
-    public async Task<Duty> CreateNewDutyAsync(DateOnly date, TimeOnly start, TimeOnly end)
+    public async Task<Duty> CreateNewDutyAsync(DateOnly date, WorkTimeRange range)
     {
         string dutyId = await _dutyRepository.GetNewIdAsync();
-        var duty = new BusinessDuty(dutyId, date, new WorkTimeRange(start, end), new WorkTask("", ""), DefaultWorkCodeId);
+        var duty = new BusinessDuty(dutyId, date, range, new WorkTask("", ""), DefaultWorkCodeId);
+        await _dutyRepository.RegisterAsync(duty);
+        return duty;
+    }
+
+    public async Task<Duty> DuplicateDutyAsync(Duty original, DateOnly date, WorkTimeRange range)
+    {
+        string dutyId = await _dutyRepository.GetNewIdAsync();
+        var duty = original.Duplicate(dutyId);
+        duty.Date = date;
+        duty.StartTime = range.StartTime;
+        duty.EndTime = range.EndTime;
         await _dutyRepository.RegisterAsync(duty);
         return duty;
     }
@@ -138,7 +149,7 @@ public class SchedulingServive
             end = start.AddMinutes(60);
         }
 
-        var createdDuty = await this.CreateNewDutyAsync(targetDate, start, end);
+        var createdDuty = await this.CreateNewDutyAsync(targetDate, new WorkTimeRange(start, end));
         return createdDuty;
     }
 

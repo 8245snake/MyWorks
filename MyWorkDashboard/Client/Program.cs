@@ -17,6 +17,7 @@ builder.Services.AddScoped(sp => new ControlService(null));
 builder.Services.AddSingleton<PageNavigatingService>();
 builder.Services.AddSingleton<JsInteropService>();
 builder.Services.AddSingleton<UserPreferenceService>();
+builder.Services.AddSingleton<ClipboardService>();
 
 builder.Services.AddAntDesign();
 

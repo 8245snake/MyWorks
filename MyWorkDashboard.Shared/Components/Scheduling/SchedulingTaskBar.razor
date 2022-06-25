@@ -1,17 +1,32 @@
 ﻿@using System.ComponentModel.DataAnnotations
+@using System.ComponentModel.Design.Serialization
 @using System.Diagnostics
 @using System.Runtime.CompilerServices
+@using System.Runtime.InteropServices.ComTypes
 @using System.Security.Cryptography
+@using MyWorkDashboard.Shared.Services
 @namespace MyWorkDashboard.Shared
 @implements IDisposable
 
-@*本文がない場合はポップアップを出さない*@
-<DraggablePanel @bind-Y="@BarModel.Top" Style="@BarModel.BarStyle" Class="@($"time-bar time-bar-color {BarModel.AdditionalClass}")" 
-                FixX GrabbingDelay="500" OnMouseDown="@BarModel.OnClick" Drop="@BarModel.OnDrop" Moved="Moved">
-    <div>
-        <p class="bar-text">@(BarModel.Duty.StartTime)～@(BarModel.Duty.EndTime) @BarModel.Duty.Title</p>
-    </div>
-</DraggablePanel>
+@inject ClipboardService clipboardService
+@inject MessageService messageService
+
+<Dropdown  Trigger="new Trigger[] { Trigger.ContextMenu }" @ref="_dropDown" >
+    <Overlay>
+        <Menu SelectedKeys="new string[]{}">
+            <MenuItem Icon="@IconType.Outline.Copy" OnClick="Copy">コピー</MenuItem>
+        </Menu>
+    </Overlay>
+    <ChildContent>
+        <DraggablePanel @bind-Y="@BarModel.Top" Style="@BarModel.BarStyle" Class="@($"time-bar time-bar-color {BarModel.AdditionalClass}")" 
+                        FixX GrabbingDelay="500" OnMouseDown="@BarModel.OnClick" Drop="@BarModel.OnDrop" Moved="Moved" >
+            <div>
+                <p class="bar-text">@(BarModel.Duty.StartTime)～@(BarModel.Duty.EndTime) @BarModel.Duty.Title</p>
+            </div>
+        </DraggablePanel>
+    </ChildContent>
+</Dropdown>
+
 
 <style>
     .time-bar {
@@ -33,6 +48,9 @@
     [Parameter, Required]
     public DutyBar BarModel { get; set; }
 
+    
+    private Dropdown _dropDown;
+
     protected override void OnParametersSet()
     {
         BarModel.RedrawInvoked -= OnRedrawInvoked;
@@ -40,9 +58,10 @@
     }
 
 
-    private void OnRedrawInvoked(object? sender, EventArgs e)
+    private async void OnRedrawInvoked(object? sender, EventArgs e)
     {
-        StateHasChanged();
+        Utility.Log($"{BarModel.Duty.Title} {BarModel.IsSelected} {BarModel.AdditionalClass}");
+        await InvokeAsync(StateHasChanged);
     }
 
 
@@ -58,6 +77,13 @@
             var start = BarModel.TimeRows.PixelToTime((int)BarModel.Top);
             BarModel.Duty.Shift(start);
         }
+    }
+
+    private async void Copy()
+    {
+        _dropDown.SetVisible(false);
+        clipboardService.Copy(BarModel.Duty);
+        await messageService.Info("タスクをコピーしました");
     }
 
 }

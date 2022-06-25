@@ -43,6 +43,7 @@ namespace MyWorkDesktop
             serviceCollection.AddSingleton<PageNavigatingService>();
             serviceCollection.AddScoped(sp=> new UserPreferenceService(new JsonPreferenceRepository(baseDir)));
             serviceCollection.AddScoped<JsInteropService>();
+            serviceCollection.AddScoped<ClipboardService>();
 
             Resources.Add("services", serviceCollection.BuildServiceProvider());
 

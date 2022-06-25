@@ -8,6 +8,7 @@
 @inject SchedulingServive schedulingServive
 @inject JsInteropService jsInteropService
 @inject MessageService messageService
+@inject ClipboardService clipboardService
 
 <div style="height: 100%; width: 100%;" @oncontextmenu:stopPropagation @oncontextmenu:preventDefault>
 
@@ -16,18 +17,12 @@
 
             @foreach (TimeRow row in _rows.Rows)
             {
-                <div class="time-row" style="@($"top:{row.RowTopPosition}px;")" @onclick="@row.OnClick">
-                    <div class="time-row-item time-label">
-                        @(row.Time.ToString())
-                    </div>
-                    <div class="time-row-item time-border time-border-color">
-                    </div>
-                </div>
+                <TimeBlock Model="row" OnAddNew="OnAddNewTask" OnPaste="OnPaste"/>
             }
 
             @foreach (DutyBar bar in _duties.Bars)
             {
-                <SchedulingTaskBar BarModel="bar"></SchedulingTaskBar>
+                <SchedulingTaskBar BarModel="bar"/>
             }
 
         </div>
@@ -42,26 +37,6 @@
         overflow-y: scroll;
     }
 
-    .time-row {
-        height: @(TimeRowCollection.RowHeight)px;
-        width: 100%;
-        position: absolute;
-        overflow: hidden;
-    }
-
-    .time-row-item {
-        float: left;
-    }
-
-    .time-label {
-        width: @(DutyBar.TimeWidth)px;
-    }
-
-    .time-border {
-        width: calc(100% - @(DutyBar.TimeWidth)px);
-        height: 100%;
-    }
-
 </style>
 
 @code {
@@ -72,8 +47,6 @@
 
     protected override async void OnInitialized()
     {
-        _rows.RowSelected += TimeRowOnSelected;
-
         schedulingServive.SelectedDutyChanged += OnSelectedDutyChanged;
         schedulingServive.DutyPropertyChanged += OnPropertyChanged;
         schedulingServive.SelectedDateChanged += OnSelectedDateChanged;
@@ -97,12 +70,6 @@
         {
             await messageService.Error(e.Message);
         }
-    }
-
-
-    private async void TimeRowOnSelected(object? sender, TimeRowSelectEventArgs e)
-    {
-        await AppendNewScheduleAsync(e.Time);
     }
 
     private async void OnSelectedDateChanged(object? sender, EventArgs e)
@@ -213,16 +180,55 @@
         TimeOnly start = selectedTimeBlock;
         TimeOnly end = selectedTimeBlock.AddMinutes(defaultSpanMinute);
         DateOnly date = _dateTime.Value;
+        WorkTimeRange range = GetFreeRange(date, start, end);
+
+        Duty createdDuty = await schedulingServive.CreateNewDutyAsync(date, range);
+        await CreateTimeBarsAsync(_dateTime.Value);
+
+        await InvokeAsync(StateHasChanged);
+        await schedulingServive.ChangeSelectedDutyAsync(createdDuty, this);
+        await schedulingServive.RaiseDutyPropertyChangedAsync(null);
+    }
+
+    private async Task DuplicateScheduleAsync(TimeOnly selectedTimeBlock)
+    {
+        if (_dateTime == null) return;
+        if (clipboardService.Duty == null) return;
+
+        TimeOnly start = selectedTimeBlock;
+        TimeOnly end = selectedTimeBlock.AddMinutes(clipboardService.Duty.TotalMinutes);
+        DateOnly date = _dateTime.Value;
+        WorkTimeRange range = GetFreeRange(date, start, end);
+
+        Duty createdDuty = await schedulingServive.DuplicateDutyAsync(clipboardService.Duty, date, range);
+        await CreateTimeBarsAsync(_dateTime.Value);
+
+        await InvokeAsync(StateHasChanged);
+        await schedulingServive.ChangeSelectedDutyAsync(createdDuty, this);
+        await schedulingServive.RaiseDutyPropertyChangedAsync(null);
+    }
+
+    /// <summary>
+    /// 指定した日の期間において空いている期間を返す
+    /// </summary>
+    /// <param name="date">日付</param>
+    /// <param name="start">検索開始時刻</param>
+    /// <param name="end">検索終了時刻</param>
+    /// <returns>空き時間の範囲</returns>
+    private WorkTimeRange GetFreeRange(DateOnly date, TimeOnly start, TimeOnly end)
+    {
+        var spanMinutes = (end - start).TotalMinutes; 
 
         // 指定した時刻を含む空き時間を検索する
         var ranges = schedulingServive.GetFreeTimeSpans(date).ToArray();
         WorkTimeRange? freeTimeRange = ranges.LastOrDefault(range => range.Contains(start) || range.Contains(end));
-        if (freeTimeRange == null) return;
+
+        if (freeTimeRange == null) return null;
 
         if (!freeTimeRange.Contains(start))
         {
             start = freeTimeRange.StartTime;
-            end = start.AddMinutes(defaultSpanMinute);
+            end = start.AddMinutes(spanMinutes);
         }
 
         if (end > freeTimeRange.EndTime)
@@ -230,16 +236,22 @@
             end = freeTimeRange.EndTime;
         }
 
-        Duty createdDuty = await schedulingServive.CreateNewDutyAsync(date, start, end);
-        await CreateTimeBarsAsync(_dateTime.Value);
+        var range = new WorkTimeRange(start, end);
+        return range;
+    }
 
-        await InvokeAsync(StateHasChanged);
-        await schedulingServive.ChangeSelectedDutyAsync(createdDuty, new object());
+    private async Task OnAddNewTask(TimeRow timeRow)
+    {
+        await AppendNewScheduleAsync(timeRow.Time);
+    }
+
+    private async void OnPaste(TimeRow timeRow)
+    {
+        await DuplicateScheduleAsync(timeRow.Time);
     }
 
     public void Dispose()
     {
-        _rows.RowSelected -= TimeRowOnSelected;
         schedulingServive.SelectedDutyChanged -= OnSelectedDutyChanged;
         schedulingServive.DutyPropertyChanged -= OnPropertyChanged;
         schedulingServive.SelectedDateChanged -= OnSelectedDateChanged;

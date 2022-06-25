@@ -15,4 +15,9 @@ public class WorkTask
     {
         return $"{nameof(Title)}: {Title}, {nameof(Description)}: {Description}";
     }
+
+    public WorkTask DeepCopy()
+    {
+        return new WorkTask(this.Title, this.Description);
+    }
 }

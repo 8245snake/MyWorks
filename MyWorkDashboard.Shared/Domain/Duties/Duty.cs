@@ -3,7 +3,7 @@
 public abstract class Duty
 {
     public string Id { get; }
-    public DateOnly Date { get; }
+    public DateOnly Date { get; set; }
 
     protected WorkTimeRange _timeRange;
     protected WorkTask _workTask;
@@ -32,6 +32,8 @@ public abstract class Duty
         set => _workTask.Description = value;
     }
 
+    public double TotalMinutes => _timeRange.Span.TotalMinutes;
+
     protected Duty(string id, DateOnly date, WorkTimeRange timeRange, WorkTask workTask)
     {
         Id = id;
@@ -57,4 +59,6 @@ public abstract class Duty
         StartTime = start;
         EndTime = StartTime.AddMinutes(minutes);
     }
+
+    public abstract Duty Duplicate(string newId);
 }
