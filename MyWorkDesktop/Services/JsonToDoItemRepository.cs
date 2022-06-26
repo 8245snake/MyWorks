@@ -192,7 +192,10 @@ public class ToDoDataOfJson
 
     public ToDoItem Create()
     {
-        return new ToDoItem(Id, DueDate, Description){Detail = Detail.Create()};
+        return new ToDoItem(Id, DueDate, Description)
+        {
+            Detail = Detail == null ? new ToDoTaskDetail() : Detail.Create()
+        };
     }
 
 }
