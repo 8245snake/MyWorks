@@ -5,21 +5,24 @@
 @using System.Runtime.InteropServices.ComTypes
 @using System.Security.Cryptography
 @using MyWorkDashboard.Shared.Services
+
 @namespace MyWorkDashboard.Shared
 @implements IDisposable
 
 @inject ClipboardService clipboardService
 @inject MessageService messageService
+@inject SchedulingServive schedulingServive
 
-<Dropdown  Trigger="new Trigger[] { Trigger.ContextMenu }" @ref="_dropDown" >
+<Dropdown Trigger="new Trigger[] { Trigger.ContextMenu }" @ref="_dropDown">
     <Overlay>
         <Menu SelectedKeys="new string[]{}">
             <MenuItem Icon="@IconType.Outline.Copy" OnClick="Copy">コピー</MenuItem>
+            <MenuItem Icon="@IconType.Outline.Pause" OnClick="Pause">中断</MenuItem>
         </Menu>
     </Overlay>
     <ChildContent>
-        <DraggablePanel @bind-Y="@BarModel.Top" Style="@BarModel.BarStyle" Class="@($"time-bar time-bar-color {BarModel.AdditionalClass}")" 
-                        FixX GrabbingDelay="500" OnMouseDown="@BarModel.OnClick" Drop="@BarModel.OnDrop" Moved="Moved" >
+        <DraggablePanel @bind-Y="@BarModel.Top" Style="@BarModel.BarStyle" Class="@($"time-bar time-bar-color {BarModel.AdditionalClass}")"
+                        FixX GrabbingDelay="500" OnMouseDown="@BarModel.OnClick" Drop="@BarModel.OnDrop" Moved="Moved">
             <div>
                 <p class="bar-text">@(BarModel.Duty.StartTime)～@(BarModel.Duty.EndTime) @BarModel.Duty.Title</p>
             </div>
@@ -48,7 +51,7 @@
     [Parameter, Required]
     public DutyBar BarModel { get; set; }
 
-    
+
     private Dropdown _dropDown;
 
     protected override void OnParametersSet()
@@ -84,6 +87,29 @@
         _dropDown.SetVisible(false);
         clipboardService.Copy(BarModel.Duty);
         await messageService.Info("タスクをコピーしました");
+    }
+
+    private async void Pause()
+    {
+        try
+        {
+            _dropDown.SetVisible(false);
+            // 予定を半分に切って登録
+            BarModel.Duty.EndTime = BarModel.Duty.EndTime.AddMinutes(-BarModel.Duty.TotalMinutes / 2);
+            await schedulingServive.UpdateDutyAsync(BarModel.Duty);
+            await schedulingServive.RaiseDutyPropertyChangedAsync(this);
+            // 予定からToDoを作成
+            var todo = await schedulingServive.CreateNewToDoItem(BarModel.Duty);
+            if (!todo.Description.Trim().EndsWith("(再開)"))
+            {
+                todo.Description += "(再開)";
+            }
+            await schedulingServive.UpdateToDoItem(todo, this);
+        }
+        catch (Exception e)
+        {
+            await messageService.Error(e.Message);
+        }
     }
 
 }

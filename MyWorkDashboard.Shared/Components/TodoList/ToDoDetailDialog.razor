@@ -1,0 +1,113 @@
+﻿@namespace MyWorkDashboard.Shared
+
+@using System.ComponentModel.DataAnnotations
+@using MyWorkDashboard.Shared.Services
+@using MyWorkDashboard.Shared.ToDoTasks
+@using MyWorkDashboard.Shared.WorkCodeFamilies
+
+@inject SchedulingServive schedulingServive
+
+<Modal Title="@("ToDo詳細情報")"
+       Visible="@_visible"
+       OnOk="@HandleOk"
+       OnCancel="@HandleCancel">
+    <Form Loading="loading" Model="@model"
+          Layout="@FormLayout.Vertical"
+          OnFinish="OnFinish"
+          OnFinishFailed="OnFinishFailed"
+          @ref="@_form">
+        <FormItem Label="優先順位">
+            <AntDesign.InputNumber @bind-Value="@context.Priority" Min="1"/>
+        </FormItem>
+        <FormItem Label="内容">
+            <Input @bind-Value="@context.Description"/>
+        </FormItem>
+        <FormItem Label="詳細">
+            <TextArea Rows="4" @bind-Value="@context.Detail" />
+        </FormItem>
+        <FormItem Label="作業コード">
+            <WorkCodeSelector DataSource="_codes" @bind-Value="@context.WorkCode"/>
+        </FormItem>
+    </Form>
+</Modal>
+
+@code {
+
+
+    private Form<Model> _form;
+    private WorkCodeFamily[] _codes = {};
+
+
+    public class Model
+    {
+
+        ToDoItem _item;
+        public string? Description { get => _item.Description; set => _item.Description = value; }
+        public string? Detail { get => _item.Detail.Comment; set => _item.Detail.Comment = value; }
+        public int? Priority { get => _item.Detail.Priority; set => _item.Detail.Priority = value; }
+        public WorkCodeFamily? WorkCode { get; set; }
+
+        public Model(ToDoItem item)
+        {
+            _item = item;
+        }
+
+        public ToDoItem GeToDoItem()
+        {
+            var clone = _item.DeepCopy();
+            clone.Detail.WorkCodeFamilyId = WorkCode?.Id;
+            return clone;
+        }
+    }
+
+    private Model model = null;
+
+    private void OnFinishFailed(EditContext editContext)
+    {
+    }
+
+    bool loading = false;
+    bool _visible = false;
+
+    public async void ShowModal(ToDoItem todoItem)
+    {
+        WorkCodeFamily[] items = await schedulingServive.GetAllWorkCodeFamily();
+        _codes = items;
+        var id = todoItem?.Detail?.WorkCodeFamilyId;
+        WorkCodeFamily? selected = null;
+        if (id != null)
+        {
+            selected = _codes.FirstOrDefault(model => model.Id == id);
+        }
+        model = new Model(todoItem){WorkCode = selected};
+
+        _visible = true;
+        StateHasChanged();
+    }
+
+    private void HandleCancel(MouseEventArgs e)
+    {
+        _visible = false;
+    }
+
+
+    /// <summary>
+    /// when form is submited, close the modal
+    /// </summary>
+    /// <param name="editContext"></param>
+    private async void OnFinish(EditContext editContext)
+    {
+        await schedulingServive.UpdateToDoItem(model.GeToDoItem(), this);
+        _visible = false;
+        _form.Reset();
+    }
+
+    /// <summary>
+    /// on modal OK button is click, submit form manually
+    /// </summary>
+    /// <param name="e"></param>
+    private void HandleOk(MouseEventArgs e)
+    {
+        _form.Submit();
+    }
+}

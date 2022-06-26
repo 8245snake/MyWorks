@@ -62,15 +62,10 @@
         <Col Span="24">
             @if (schedulingServive.SelectedDuty is BusinessDuty)
             {
-            <Select DataSource="@_codes"
-                @bind-Value="@SelectedWorkCodeFamily"
-                LabelName="@nameof(WorkCodeVM.Label)"
-                ValueName="@nameof(WorkCodeVM.Value)"
-                Placeholder="作業コードを選択してください"
-                DefaultActiveFirstItem="false"
-                EnableSearch>
-            </Select>
-            }
+                <WorkCodeSelector 
+                    DataSource="@_codes"
+                    @bind-Value="@SelectedWorkCodeFamily"/>
+                }
         </Col>
     </Row>
 
@@ -107,6 +102,9 @@
     private bool _isEmpty => schedulingServive.SelectedDuty == null;
     private bool _isBreakTime;
 
+    /// <summary>
+    /// タイトル
+    /// </summary>
     string? Title
     {
         get => schedulingServive.SelectedDuty?.Title;
@@ -120,6 +118,9 @@
         }
     }
 
+    /// <summary>
+    /// 説明
+    /// </summary>
     string? Description
     {
         get => schedulingServive.SelectedDuty?.Description;
@@ -134,36 +135,16 @@
         }
     }
 
-    private async void InvokeRaiseDutyPropertyChangedAsync()
-    {
-        await  schedulingServive.RaiseDutyPropertyChangedAsync(this);
-    }
-
-    TimeOnly? StartTime => schedulingServive.SelectedDuty?.StartTime;
-
-    TimeOnly? EndTime => schedulingServive.SelectedDuty?.EndTime;
-
-    private async void OnSelectedTimeChange(TimeRangeChangeEventArgs e)
-    {
-        if (schedulingServive?.SelectedDuty != null)
-        {
-            if (schedulingServive.SelectedDuty.StartTime != e.StartTime || schedulingServive.SelectedDuty.EndTime != e.EndTime)
-            {
-                schedulingServive.SelectedDuty.StartTime = e.StartTime;
-                schedulingServive.SelectedDuty.EndTime = e.EndTime;
-                StateHasChanged();
-                await schedulingServive.RaiseDutyPropertyChangedAsync(this);
-            }
-        }
-    }
-
+    /// <summary>
+    /// 作業コード
+    /// </summary>
     private WorkCodeFamily? SelectedWorkCodeFamily
     {
         get
         {
             if (schedulingServive.SelectedDuty is BusinessDuty businessDuty)
             {
-                return _codes.FirstOrDefault(c => c.Value.Id == businessDuty.WorkCodeFamilyId)?.Value;
+                return _codes.FirstOrDefault(c => c.Id == businessDuty.WorkCodeFamilyId);
             }
             return null;
         }
@@ -181,32 +162,44 @@
         }
     }
 
+    /// <summary>
+    /// データソース
+    /// </summary>
+    List<WorkCodeFamily> _codes;
 
-    class WorkCodeVM
+    /// <summary>
+    /// プロパティが変化したことを通知する
+    /// </summary>
+    private async void InvokeRaiseDutyPropertyChangedAsync()
     {
-        public string Label { get; set; }
-        public WorkCodeFamily Value { get; set; }
-
-        public WorkCodeVM(WorkCodeFamily value)
-        {
-            Value = value;
-            Label = $"{value.Category.Id}:{value.Category.Name} {value.WorkCode.Id} ({value.WorkCode.Name})";
-        }
+        await  schedulingServive.RaiseDutyPropertyChangedAsync(this);
     }
 
-    List<WorkCodeVM> _codes;
+    TimeOnly? StartTime => schedulingServive.SelectedDuty?.StartTime;
+
+    TimeOnly? EndTime => schedulingServive.SelectedDuty?.EndTime;
 
     protected override async void OnInitialized()
     {
-        _codes = new List<WorkCodeVM>();
-        foreach (WorkCodeFamily family in await schedulingServive.GetAllWorkCodeFamily())
-        {
-            _codes.Add(new WorkCodeVM(family));
-        }
-
+        _codes = new List<WorkCodeFamily>();
+        _codes.AddRange(await schedulingServive.GetAllWorkCodeFamily());
         schedulingServive.SelectedDutyChanged += OnSelectedDutyChanged;
         schedulingServive.DutyPropertyChanged += OnPropertyChanged;
 
+    }
+
+    private async void OnSelectedTimeChange(TimeRangeChangeEventArgs e)
+    {
+        if (schedulingServive?.SelectedDuty != null)
+        {
+            if (schedulingServive.SelectedDuty.StartTime != e.StartTime || schedulingServive.SelectedDuty.EndTime != e.EndTime)
+            {
+                schedulingServive.SelectedDuty.StartTime = e.StartTime;
+                schedulingServive.SelectedDuty.EndTime = e.EndTime;
+                StateHasChanged();
+                await schedulingServive.RaiseDutyPropertyChangedAsync(this);
+            }
+        }
     }
 
 
@@ -271,12 +264,11 @@
         if (schedulingServive.SelectedDuty == null) return;
 
         var duty = schedulingServive.SelectedDuty;
-        var item = await schedulingServive.CreateNewToDoItem(schedulingServive.SelectedDate.Value);
-        item.Description = duty.Title;
+        var todo = await schedulingServive.CreateNewToDoItem(duty);
+        await schedulingServive.UpdateToDoItem(todo, this);
+
         await schedulingServive.DeleteDutyAsync(duty.Id);
         await schedulingServive.ChangeSelectedDutyAsync(null, this);
-
-        await schedulingServive.UpdateToDoItem(item, this);
     }
 
     public void Dispose()

@@ -31,8 +31,15 @@ public class ToDoItemVm
         Duty created = await _servive.AddNewScheduleAsync(_servive.SelectedDate.Value);
 
         created.Title = Todo.Description;
-        await _servive.ChangeSelectedDutyAsync(created, new object());
-        DeleteTask();
+        created.Description = Todo.Detail.Comment;
+        if (!string.IsNullOrWhiteSpace(Todo.Detail.WorkCodeFamilyId) && created is BusinessDuty bd)
+        {
+            bd.WorkCodeFamilyId = Todo.Detail.WorkCodeFamilyId;
+        }
+
+        await _servive.UpdateDutyAsync(created);
+        await _servive.ChangeSelectedDutyAsync(created, this);
+        await DeleteTask();
     }
 
     public async Task DeleteTask()

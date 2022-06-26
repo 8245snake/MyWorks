@@ -1,0 +1,51 @@
+﻿@namespace MyWorkDashboard.Shared
+
+@using MyWorkDashboard.Shared.WorkCodeFamilies
+@using MyWorkDashboard.Shared.Duties
+@using System.ComponentModel.DataAnnotations
+
+
+<Select DataSource="@_dataSource"
+        @bind-Value="@Value"
+        LabelName="@nameof(WorkCodeVM.Label)"
+        ValueName="@nameof(WorkCodeVM.Value)"
+        Placeholder="作業コードを選択してください"
+        DefaultActiveFirstItem="false"
+        EnableSearch>
+</Select>
+
+@code {
+
+    [Parameter]
+    public EventCallback<WorkCodeFamily?> Selected { get; set; }
+
+    [Parameter]
+    public WorkCodeFamily? Value
+    {
+        get => _value;
+        set
+        {
+            if ( _value != value)
+            {
+                _value = value;
+                ValueChanged.InvokeAsync(value);
+            }
+        }
+    }
+
+    private WorkCodeFamily? _value;
+
+    [Parameter]
+    public EventCallback<WorkCodeFamily?> ValueChanged { get; set; }
+
+    [Parameter, Required]
+    public IEnumerable<WorkCodeFamily> DataSource { get; set; }
+
+    private WorkCodeVM[] _dataSource = { };
+
+    protected override void OnInitialized()
+    {
+        _dataSource = DataSource.Select(d => new WorkCodeVM(d)).ToArray();
+    }
+
+}

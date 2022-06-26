@@ -37,7 +37,7 @@ else
         @foreach (var item in _todoItems)
         {
             <AntDesign.Col Span="@(span)">
-                <ToDoCard Model="item" StateChanged="StateHasChanged"/>
+                <ToDoCard Model="item" StateChanged="StateChanged"/>
             </AntDesign.Col>
         }
     </AntDesign.Row>
@@ -53,6 +53,7 @@ else
     {
         schedulingServive.SelectedDateChanged += OnSelectedDateChanged;
         schedulingServive.ToDoItemChanged += OnToDoItemChanged;
+        schedulingServive.ToDoItemDeleted += OnToDoItemDeleted;
     }
 
     protected override async Task OnInitializedAsync()
@@ -74,31 +75,37 @@ else
     private async Task ShowTodoItems()
     {
         _todoItems.Clear();
-        if (schedulingServive.SelectedDate != null)
-        {
-            _todoItems.AddRange((await schedulingServive.FindToDoItemsByDate(schedulingServive.SelectedDate.Value))
-                .Select(CreateViewModel));
-        }
+        if (schedulingServive.SelectedDate == null) return;
+
+        var items = await schedulingServive.FindToDoItemsByDate(schedulingServive.SelectedDate.Value);
+        // 優先順位でソートして追加する
+        var models = items.OrderBy(item => item.Detail.Priority).Select(CreateViewModel);
+        _todoItems.AddRange(models);
     }
 
     private async void OnToDoItemChanged(object? sender, EventArgs e)
     {
         if(sender == this) return;
-        await ShowTodoItems();
-        StateHasChanged();
+        await StateChanged();
+    }
+
+    
+    private async void OnToDoItemDeleted(object? sender, EventArgs e)
+    {
+        await StateChanged();
     }
 
     private async void OnSelectedDateChanged(object? sender, EventArgs e)
     {
-        await ShowTodoItems();
-        this.StateHasChanged();
+        await StateChanged();
     }
 
     private async Task AddNewItem()
     {
         if (schedulingServive.SelectedDate == null) return;
-        var item = await schedulingServive.CreateNewToDoItem(schedulingServive.SelectedDate.Value);
-        ToDoItemVm vm = CreateViewModel(item);
+        ToDoItem todoItem = await schedulingServive.CreateNewToDoItem(schedulingServive.SelectedDate.Value);
+        todoItem.Detail.Priority = 1;
+        ToDoItemVm vm = CreateViewModel(todoItem);
         _todoItems.Add(vm);
         vm.Select();
     }
@@ -108,9 +115,17 @@ else
         return  new ToDoItemVm(item, _todoItems, schedulingServive);
     }
 
+    private async Task StateChanged()
+    {
+        await ShowTodoItems();
+        await InvokeAsync(StateHasChanged);
+    }
+
     public void Dispose()
     {
         schedulingServive.SelectedDateChanged -= OnSelectedDateChanged;
-        schedulingServive.ToDoItemChanged -= OnToDoItemChanged;    }
+        schedulingServive.ToDoItemChanged -= OnToDoItemChanged;
+        schedulingServive.ToDoItemDeleted -= OnToDoItemDeleted;
+    }
 
 }

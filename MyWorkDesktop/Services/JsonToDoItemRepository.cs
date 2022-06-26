@@ -175,6 +175,9 @@ public class ToDoDataOfJson
     [JsonProperty("description")]
     public string Description { get; set; }
 
+    [JsonProperty("detail")]
+    public ToDoTaskDetailJson Detail { get; set; }
+
     public ToDoDataOfJson()
     {
     }
@@ -184,11 +187,44 @@ public class ToDoDataOfJson
         this.Id = item.Id;
         this.DueDate = item.DueDate;
         this.Description = item.Description;
+        this.Detail = new ToDoTaskDetailJson(item.Detail);
     }
 
     public ToDoItem Create()
     {
-        return new ToDoItem(Id, DueDate, Description);
+        return new ToDoItem(Id, DueDate, Description){Detail = Detail.Create()};
     }
 
+}
+
+[JsonObject]
+public class ToDoTaskDetailJson
+{
+    [JsonProperty("comment")]
+    public string? Comment { get; set; }
+    [JsonProperty("codeId")]
+    public string? WorkCodeFamilyId { get; set; }
+    [JsonProperty("priority")]
+    public int? Priority { get; set; }
+
+    public ToDoTaskDetailJson()
+    {
+    }
+
+    public ToDoTaskDetailJson(ToDoTaskDetail itemDetail)
+    {
+        Comment = itemDetail.Comment;
+        WorkCodeFamilyId = itemDetail.WorkCodeFamilyId;
+        Priority = itemDetail.Priority;
+    }
+
+    public ToDoTaskDetail Create()
+    {
+        return new ToDoTaskDetail()
+        {
+            Comment = Comment,
+            WorkCodeFamilyId = WorkCodeFamilyId,
+            Priority = Priority,
+        };
+    }
 }

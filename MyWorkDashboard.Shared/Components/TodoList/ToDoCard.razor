@@ -1,37 +1,78 @@
 ﻿@namespace MyWorkDashboard.Shared
 
 @using System.ComponentModel.DataAnnotations
+@using MyWorkDashboard.Shared.Services
+
+@implements IDisposable
+@inject SchedulingServive schedulingServive
 
 <Card Hoverable="true" Style="padding: 2px" BodyStyle="padding: 2px">
     <Body>
-    <Row>
-        <Col Span="23">
-            <div style="width: 100%; height: 100%;">
-                <AntDesign.Input @ref="_textBox" TValue="string" @bind-value="_description" Style="@($"display: {_textDisplayStyle};")" OnPressEnter="OnPressEnter" OnBlur="OnBlur"/>
-                <div @onclick="OnClick" style="@($"display : {_paragraphDisplayStyle}; width: 100%; height: 100%;")">@_description</div>
+    <Row Align="middle">
+        <Col>
+            <Tag Color="@_colorCode" Class="number-tag">
+                @if (@Model?.Todo?.Detail?.Priority == null)
+                {
+                    @("?")
+                }
+                else
+                {
+                    @Model.Todo.Detail.Priority
+                }
+            </Tag>
+        </Col>
+        <Col Flex=@("auto")>
+            <AntDesign.Input @ref="_textBox" TValue="string" @bind-value="_description" Style="@($"display: {_textDisplayStyle};")" OnPressEnter="OnPressEnter" OnBlur="OnBlur"/>
+            <div @onclick="OnClick" class="todo-text" style="@($"display : {_paragraphDisplayStyle}; width: 100%; ")">
+                <p class="todo-text" style="@($"display : table-cell; width: 100%; ")">@_description</p>
             </div>
         </Col>
-        <Col Span="1" >
-            <Dropdown>
+        <Col>
+            <DropdownButton OnClick='OnDetailClick' Trigger="new Trigger[] { Trigger.Click }">
                 <Overlay>
-                    <Menu>
+                    <Menu SelectedKeys="@(new string[]{})">
                         <MenuItem OnClick="CreateTask">
-                            予定を作成する
+                            タスクを作成
                         </MenuItem>
                         <MenuItem OnClick="SendTomorrow">
                             翌日に送る
                         </MenuItem>
+                        <MenuItem>
+                            <Popconfirm Placement="@Placement.Bottom" Title="削除してよろしいですか" OkText="削除する" CancelText="キャンセル" OnConfirm="DeleteTask">
+                                <Button Danger Block>削除</Button>
+                            </Popconfirm>
+                        </MenuItem>
+
                     </Menu>
                 </Overlay>
                 <ChildContent>
-                    <Icon Type="menu" Theme="outline"/>
+                    詳細
                 </ChildContent>
-            </Dropdown>
+            </DropdownButton>
         </Col>
     </Row>
         
     </Body>
 </Card>
+
+<ToDoDetailDialog @ref="_dialog"/>
+
+<style>
+    .todo-text {
+        height: 100%;
+        min-height: 20px;
+        display: table-cell;
+        vertical-align: middle;
+    }
+
+    .number-tag {
+        color: white;
+        background-color: white;
+        -webkit-text-stroke: 0.5px black;
+        font-size: large;
+        font-weight: bold;
+    }
+</style>
 
 @code {
 
@@ -43,23 +84,19 @@
 
     AntDesign.Input<string> _textBox;
 
+    ToDoDetailDialog _dialog;
+
     private string _description
     {
         get => this.Model.Todo.Description;
-        set
-        {
-            this.Model.Todo.Description = value;
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                _canDeleteOnEmpty = true;
-            }
-        }
+        set => this.Model.Todo.Description = value;
     }
 
     private bool _isEditting = false;
-    private string _textDisplayStyle => _isEditting ? "inherit" : "none";
-    private string _paragraphDisplayStyle => _isEditting ? "none" : "inherit";
-    private bool _canDeleteOnEmpty = false;
+    private string _textDisplayStyle => _isEditting ? "table-cell" : "none";
+    private string _paragraphDisplayStyle => _isEditting ? "none" : "block";
+
+    private string _colorCode = "#fff";
 
     // クリックするたびにキャレットが移動するのを防ぐためのフラグ
     private bool _focusHold = false;
@@ -67,6 +104,15 @@
     protected override void OnInitialized()
     {
         _isEditting = Model.IsEditing;
+    }
+
+    protected override void OnParametersSet()
+    {
+        var workCodeFamilyId = Model?.Todo?.Detail?.WorkCodeFamilyId;
+        if (!string.IsNullOrWhiteSpace(workCodeFamilyId))
+        {
+            _colorCode = schedulingServive.GetWorkCodeFamilyColorCode(workCodeFamilyId);
+        }
     }
 
     private void OnClick()
@@ -86,13 +132,6 @@
     private async Task OnBlur()
     {
         _isEditting = false;
-        if (_canDeleteOnEmpty && string.IsNullOrWhiteSpace(_description))
-        {
-            // 一度でも文字が入力されたことがあった場合は空にしたときに削除する
-            await DeleteTask();
-            return;
-        }
-
         await Model.Update();
     }
 
@@ -121,6 +160,17 @@
     private async Task DeleteTask()
     {
         await Model.DeleteTask();
-        await StateChanged.InvokeAsync(this);
     }
+
+    private void OnDetailClick()
+    {
+        _dialog.ShowModal(Model.Todo);
+    }
+
+    public void Dispose()
+    {
+        Model = null;
+        _textBox = null;
+    }
+
 }

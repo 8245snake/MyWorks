@@ -13,6 +13,7 @@ public class SchedulingServive
     public event EventHandler DutyDeleted;
     public event EventHandler SelectedDateChanged;
     public event EventHandler ToDoItemChanged;
+    public event EventHandler ToDoItemDeleted;
 
     private readonly IDutyRepository _dutyRepository;
     private readonly IWorkCodeFamilyRepository _workCodeFamilyRepository;
@@ -59,6 +60,10 @@ public class SchedulingServive
         return _workCodeFamilyRepository.GetAllAsync();
     }
 
+    public Task<WorkCodeFamily?> FindWorkCodeFamilyById(string id)
+    {
+        return _workCodeFamilyRepository.FindByIdAsync(id);
+    }
 
     public async Task<string> GetDutyColorCodeAsync(BusinessDuty? duty)
     {
@@ -81,6 +86,17 @@ public class SchedulingServive
         return Task.CompletedTask;
     }
 
+    public async Task RaiseDutyPropertyChangedAsync(object? sender)
+    {
+        await _dutyRepository.RegisterAsync(SelectedDuty);
+        DutyPropertyChanged.Invoke(sender, EventArgs.Empty);
+    }
+
+    public async Task UpdateDutyAsync(Duty duty)
+    {
+        await _dutyRepository.RegisterAsync(duty);
+    }
+
     public Task ChangeSelectedDateAsync(DateOnly? date, object sender)
     {
         SelectedDate = date;
@@ -88,11 +104,7 @@ public class SchedulingServive
         return Task.CompletedTask;
     }
 
-    public async Task RaiseDutyPropertyChangedAsync(object? sender)
-    {
-        await _dutyRepository.RegisterAsync(SelectedDuty);
-        DutyPropertyChanged.Invoke(sender, EventArgs.Empty);
-    }
+
 
     public async Task<Duty[]> FindDutiesByDateAsync(DateOnly date)
     {
@@ -232,6 +244,11 @@ public class SchedulingServive
         return await _toDoRepository.FindByDateAsync(date);
     }
 
+    public async Task<ToDoItem?> FindToDoItemsById(string id)
+    {
+        return await _toDoRepository.FindByIdAsync(id);
+    }
+
     public async Task<ToDoItem> CreateNewToDoItem(DateOnly date)
     {
         string id = await _toDoRepository.GetNewIdAsync();
@@ -240,9 +257,24 @@ public class SchedulingServive
         return item;
     }
 
+    public async Task<ToDoItem> CreateNewToDoItem(Duty duty)
+    {
+        ToDoItem todoItem = await CreateNewToDoItem(duty.Date);
+        todoItem.Description = duty.Title;
+        todoItem.Detail.Comment = duty.Description;
+        todoItem.Detail.Priority = 1;
+        if (duty is BusinessDuty bd)
+        {
+            todoItem.Detail.WorkCodeFamilyId = bd.WorkCodeFamilyId;
+        }
+
+        return todoItem;
+    }
+
     public async Task DeleteToDoItem(string id)
     {
         await _toDoRepository.DeleteAsync(id);
+        ToDoItemDeleted?.Invoke(this, EventArgs.Empty);
     }
 
     public async Task UpdateToDoItem(ToDoItem item, object? sender)
