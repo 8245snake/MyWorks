@@ -46,7 +46,7 @@
         _duties.ItemSelected += DutiesOnItemSelected;
 
         await ShowTimeBarsAsync(_dateTime.Value);
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
     }
 
 
@@ -54,7 +54,7 @@
     {
         if(sender == this) return;
         await ShowTimeBarsAsync(_dateTime.Value);
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
     }
 
     private async void OnSelectedDutyChanged(object? sender, EventArgs e)
@@ -74,14 +74,14 @@
         }
 
         await ShowTimeBarsAsync(_dateTime.Value);
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
     }
 
     private async void OnPropertyChanged(object? sender, EventArgs e)
     {
         if(sender == this) return;
         await ShowTimeBarsAsync(_dateTime.Value);
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
     }
 
     private async void DutiesOnItemSelected(object? sender, DutyBarEventArgs e)
@@ -89,13 +89,11 @@
         await schedulingServive.ChangeSelectedDutyAsync(e.DutyBar.Duty, this);
         foreach (var bar in _duties.Bars)
         {
-            bar.IsSelected = false;
-            if (e.DutyBar.Duty == bar.Duty)
-            {
-                bar.IsSelected = true;
-            }
+            bar.IsSelected = e.DutyBar.Duty == bar.Duty;
         }
-        StateHasChanged();
+
+        await ShowTimeBarsAsync(_dateTime.Value);
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task ShowTimeBarsAsync(DateOnly date)
