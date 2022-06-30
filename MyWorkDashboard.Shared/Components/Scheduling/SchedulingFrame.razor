@@ -180,7 +180,7 @@
         TimeOnly start = selectedTimeBlock;
         TimeOnly end = selectedTimeBlock.AddMinutes(defaultSpanMinute);
         DateOnly date = _dateTime.Value;
-        WorkTimeRange range = GetFreeRange(date, start, end);
+        WorkTimeRange range = schedulingServive.GetFreeRange(date, start, end);
 
         Duty createdDuty = await schedulingServive.CreateNewDutyAsync(date, range);
         await CreateTimeBarsAsync(_dateTime.Value);
@@ -198,7 +198,7 @@
         TimeOnly start = selectedTimeBlock;
         TimeOnly end = selectedTimeBlock.AddMinutes(clipboardService.Duty.TotalMinutes);
         DateOnly date = _dateTime.Value;
-        WorkTimeRange range = GetFreeRange(date, start, end);
+        WorkTimeRange range = schedulingServive.GetFreeRange(date, start, end);
 
         Duty createdDuty = await schedulingServive.DuplicateDutyAsync(clipboardService.Duty, date, range);
         await CreateTimeBarsAsync(_dateTime.Value);
@@ -206,38 +206,6 @@
         await InvokeAsync(StateHasChanged);
         await schedulingServive.ChangeSelectedDutyAsync(createdDuty, this);
         await schedulingServive.RaiseDutyPropertyChangedAsync(null);
-    }
-
-    /// <summary>
-    /// 指定した日の期間において空いている期間を返す
-    /// </summary>
-    /// <param name="date">日付</param>
-    /// <param name="start">検索開始時刻</param>
-    /// <param name="end">検索終了時刻</param>
-    /// <returns>空き時間の範囲</returns>
-    private WorkTimeRange GetFreeRange(DateOnly date, TimeOnly start, TimeOnly end)
-    {
-        var spanMinutes = (end - start).TotalMinutes; 
-
-        // 指定した時刻を含む空き時間を検索する
-        var ranges = schedulingServive.GetFreeTimeSpans(date).ToArray();
-        WorkTimeRange? freeTimeRange = ranges.LastOrDefault(range => range.Contains(start) || range.Contains(end));
-
-        if (freeTimeRange == null) return null;
-
-        if (!freeTimeRange.Contains(start))
-        {
-            start = freeTimeRange.StartTime;
-            end = start.AddMinutes(spanMinutes);
-        }
-
-        if (end > freeTimeRange.EndTime)
-        {
-            end = freeTimeRange.EndTime;
-        }
-
-        var range = new WorkTimeRange(start, end);
-        return range;
     }
 
     private async Task OnAddNewTask(TimeRow timeRow)

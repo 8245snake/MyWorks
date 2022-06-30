@@ -24,4 +24,14 @@ public class MockPreferenceRepository : IPreferenceRepository
         SaveThemePreference(preference);
         return Task.CompletedTask;
     }
+
+    public Task<DutyTemplate[]> GetAllDutyTemplatesAsync()
+    {
+        return Task.FromResult(new DutyTemplate[]
+        {
+            new DutyTemplate("1", "なんか1"),
+            new DutyTemplate("2", "なんか2"),
+            new DutyTemplate("3", "なんか3"),
+        });
+    }
 }

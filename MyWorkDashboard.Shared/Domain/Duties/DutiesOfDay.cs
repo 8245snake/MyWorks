@@ -5,23 +5,21 @@ namespace MyWorkDashboard.Shared.Duties;
 
 public class DutiesOfDay
 {
-    private Duty[] _duties;
 
-    public DutiesOfDay(IEnumerable<Duty> duties)
+    private readonly IWorkCodeFamilyRepository _repository;
+
+    public DutiesOfDay(IWorkCodeFamilyRepository repository)
     {
-        this._duties = duties.ToArray();
+        _repository = repository;
     }
 
-
-    public async Task<DutyStaticticResult[]> TakeStatistics(IWorkCodeFamilyRepository repository)
+    public async Task<DutyStaticticResult[]> TakeStatistics(IEnumerable<Duty> duties)
     {
-        if (repository == null) return new DutyStaticticResult[]{};
-
         List<DutyStaticticResult> results = new List<DutyStaticticResult>();
 
-        foreach (var gr in this._duties.OfType<BusinessDuty>().GroupBy(d=>d.WorkCodeFamilyId))
+        foreach (var gr in duties.OfType<BusinessDuty>().GroupBy(d=>d.WorkCodeFamilyId))
         {
-            WorkCodeFamily family = await repository.FindByIdAsync(gr.Key);
+            WorkCodeFamily? family = await _repository.FindByIdAsync(gr.Key);
             if (family == null)
             {
                 throw new DataException($"データ不整合です。WorkCodeFamilyId={gr.Key} のデータは存在しません");
@@ -33,7 +31,7 @@ public class DutiesOfDay
             results.Add(result);
         }
 
-        var breakResult = GetBreakResult();
+        var breakResult = GetBreakResult(duties);
         if (breakResult != null)
         {
             // 休憩時間も集計する
@@ -43,9 +41,9 @@ public class DutiesOfDay
         return results.ToArray();
     }
 
-    private DutyStaticticResult? GetBreakResult()
+    private DutyStaticticResult? GetBreakResult(IEnumerable<Duty> duties)
     {
-        BreakDuty[] breakDuties = this._duties.OfType<BreakDuty>().ToArray();
+        BreakDuty[] breakDuties = duties.OfType<BreakDuty>().ToArray();
         if (breakDuties.Length < 1)
         {
             return null;
