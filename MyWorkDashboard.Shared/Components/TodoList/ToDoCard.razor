@@ -96,7 +96,18 @@
     private string _textDisplayStyle => _isEditting ? "table-cell" : "none";
     private string _paragraphDisplayStyle => _isEditting ? "none" : "block";
 
-    private string _colorCode = "#fff";
+    private string _colorCode
+    {
+        get
+        {
+            var workCodeFamilyId = Model?.Todo?.Detail?.WorkCodeFamilyId;
+            if (!string.IsNullOrWhiteSpace(workCodeFamilyId))
+            {
+                return schedulingServive.GetWorkCodeFamilyColorCode(workCodeFamilyId);
+            }
+            return "#fff";
+        }
+    }
 
     // クリックするたびにキャレットが移動するのを防ぐためのフラグ
     private bool _focusHold = false;
@@ -106,14 +117,6 @@
         _isEditting = Model.IsEditing;
     }
 
-    protected override void OnParametersSet()
-    {
-        var workCodeFamilyId = Model?.Todo?.Detail?.WorkCodeFamilyId;
-        if (!string.IsNullOrWhiteSpace(workCodeFamilyId))
-        {
-            _colorCode = schedulingServive.GetWorkCodeFamilyColorCode(workCodeFamilyId);
-        }
-    }
 
     private void OnClick()
     {
