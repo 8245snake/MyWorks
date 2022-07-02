@@ -1,0 +1,65 @@
+﻿@using System.Reflection
+@namespace MyWorkDashboard.Shared
+
+<Select DataSource="@_items"
+        @bind-Value="@Value"
+        ValueName="@nameof(Item.Value)"
+        LabelName="@nameof(Item.Value)"
+        DefaultActiveFirstItem
+        Style="width: 200px;">
+    <ItemTemplate>
+        <Icon Type="@context.Value" Theme="outline"/>　@context.Value
+    </ItemTemplate>
+</Select>
+
+
+@code
+{
+    [Parameter]
+    public EventCallback<string?> ValueChanged { get; set; }
+
+    [Parameter]
+    public string Value
+    {
+        get => _value;
+        set
+        {
+            if (_value != value)
+            {
+                _value = value;
+                ValueChanged.InvokeAsync(_value);
+            }
+        }
+    }
+
+    private class Item
+    {
+        public string Value { get; set; }
+    }
+
+    private List<Item> _items;
+    private string _value;
+
+
+    protected override Task OnInitializedAsync()
+    {
+        _items = new List<Item>(new Item[]
+        {
+            new Item(){Value = "mail"},
+            new Item(){Value = "edit"},
+            new Item(){Value = "form"},
+            new Item(){Value = "copy"},
+            new Item(){Value = "scissor"},
+            new Item(){Value = "delete"},
+            new Item(){Value = "snippets"},
+            new Item(){Value = "diff"},
+            new Item(){Value = "coffee"},
+            new Item(){Value = "bar-chart"},
+            new Item(){Value = "audio"},
+            new Item(){Value = "user"},
+        });
+
+        return Task.CompletedTask;
+    }
+
+}

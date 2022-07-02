@@ -10,6 +10,7 @@
 @inject MessageService messageService
 @inject ClipboardService clipboardService
 
+
 <div style="height: 100%; width: 100%;" @oncontextmenu:stopPropagation @oncontextmenu:preventDefault>
 
     <Row Style="height: 100%;">
@@ -17,7 +18,7 @@
 
             @foreach (TimeRow row in _rows.Rows)
             {
-                <TimeBlock Model="row" OnAddNew="OnAddNewTask" OnPaste="OnPaste"/>
+                <TimeBlock Model="row" OnAddNew="OnAddNewTask" OnPaste="OnPaste" OnAddByTemplate="OnAddByTemplate"/>
             }
 
             @foreach (DutyBar bar in _duties.Bars)
@@ -183,12 +184,9 @@
         WorkTimeRange range = schedulingServive.GetFreeRange(date, start, end);
 
         Duty createdDuty = await schedulingServive.CreateNewDutyAsync(date, range);
-        await CreateTimeBarsAsync(_dateTime.Value);
-
-        await InvokeAsync(StateHasChanged);
-        await schedulingServive.ChangeSelectedDutyAsync(createdDuty, this);
-        await schedulingServive.RaiseDutyPropertyChangedAsync(null);
+        await ShowNewDuty(createdDuty);
     }
+
 
     private async Task DuplicateScheduleAsync(TimeOnly selectedTimeBlock)
     {
@@ -201,10 +199,27 @@
         WorkTimeRange range = schedulingServive.GetFreeRange(date, start, end);
 
         Duty createdDuty = await schedulingServive.DuplicateDutyAsync(clipboardService.Duty, date, range);
+        await ShowNewDuty(createdDuty);
+    }
+
+    private async void OnAddByTemplate(TemplateMenuCommand command)
+    {
+        DateOnly date = _dateTime.Value;
+        DateTime start = new DateTime(date.Year, date.Month, date.Day, command.TimeRow.Time.Hour, command.TimeRow.Time.Minute, 0);
+        BusinessDuty? createdDuty = await schedulingServive.CreateNewDutyFromTemplate(command.TemplateId, start);
+        if (createdDuty != null)
+        {
+            await schedulingServive.UpdateDutyAsync(createdDuty);
+            await ShowNewDuty(createdDuty);
+        }
+    }
+
+    private async Task ShowNewDuty(Duty createdDuty)
+    {
         await CreateTimeBarsAsync(_dateTime.Value);
 
         await InvokeAsync(StateHasChanged);
-        await schedulingServive.ChangeSelectedDutyAsync(createdDuty, this);
+        await schedulingServive.ChangeSelectedDutyAsync(createdDuty, null);
         await schedulingServive.RaiseDutyPropertyChangedAsync(null);
     }
 
@@ -227,5 +242,6 @@
         _duties.ItemSelected -= DutiesOnItemDropped;
         _duties.Clear();
     }
+
 
 }

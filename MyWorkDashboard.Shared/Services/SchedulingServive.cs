@@ -1,7 +1,10 @@
-﻿using MyWorkDashboard.Shared.Duties;
+﻿using System.Collections;
+using System.Net.Http.Headers;
+using MyWorkDashboard.Shared.Duties;
 using MyWorkDashboard.Shared.Mock;
 using MyWorkDashboard.Shared.Service;
 using MyWorkDashboard.Shared.ToDoTasks;
+using MyWorkDashboard.Shared.UserPreferences;
 using MyWorkDashboard.Shared.WorkCodeFamilies;
 
 namespace MyWorkDashboard.Shared.Services;
@@ -22,24 +25,23 @@ public class SchedulingServive
     private readonly DutyService _dutyService;
     private readonly WorkCodeService _workCodeService;
     private readonly ToDoService _todoService;
+    private readonly TemplateService _templateService;
     private readonly DutiesOfDay _dutiesOfDay;
 
     public Duty SelectedDuty { get; private set; }
     public DateOnly? SelectedDate { get; private set; }
 
     public SchedulingServive()
+     : this(new MockDutyRepository(), new MockWorkCodeFamilyRepository(), new MockDutyColorRepository(), new MockToDoRepository(), new MockPreferenceRepository())
     {
-        _workCodeService = new WorkCodeService(new MockWorkCodeFamilyRepository(), new MockDutyColorRepository());
-        _dutyService = new DutyService(new MockDutyRepository(), _workCodeService.GetDefaultWorkCodeId());
-        _todoService = new ToDoService(new MockToDoRepository());
-        _dutiesOfDay = new DutiesOfDay(new MockWorkCodeFamilyRepository());
     }
 
-    public SchedulingServive(IDutyRepository dutyRepository, IWorkCodeFamilyRepository workCodeFamilyRepository, IDutyColorRepository dutyColorRepository, IToDoRepository toDoRepository)
+    public SchedulingServive(IDutyRepository dutyRepository, IWorkCodeFamilyRepository workCodeFamilyRepository, IDutyColorRepository dutyColorRepository, IToDoRepository toDoRepository, IPreferenceRepository preferenceRepository)
     {
         _workCodeService = new WorkCodeService(workCodeFamilyRepository, dutyColorRepository);
         _dutyService = new DutyService(dutyRepository, _workCodeService.GetDefaultWorkCodeId());
         _todoService = new ToDoService(toDoRepository);
+        _templateService = new TemplateService(preferenceRepository);
         _dutiesOfDay = new DutiesOfDay(workCodeFamilyRepository);
     }
 
@@ -91,6 +93,11 @@ public class SchedulingServive
     public async Task<Duty> CreateNewDutyAsync(DateOnly date, WorkTimeRange range) => await _dutyService.CreateNewDutyAsync(date, range);
 
     public Task<Duty> DuplicateDutyAsync(Duty original, DateOnly date, WorkTimeRange range) => _dutyService.DuplicateDutyAsync(original, date, range);
+
+    public Task<BusinessDuty?> CreateNewDutyFromTemplate(string templateId, DateTime startTime)
+    {
+        return _templateService.CreateNewDutyFromTemplate(templateId, startTime, _dutyService);
+    }
 
     public async Task DeleteDutyAsync(string id)
     {
@@ -149,5 +156,4 @@ public class SchedulingServive
     public Task<int> MoveTodayOlderTodoItems() => _todoService.MoveTodayOlderTodoItems();
 
     #endregion
-
 }

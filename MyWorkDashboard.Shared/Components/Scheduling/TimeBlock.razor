@@ -1,16 +1,32 @@
 ﻿@using System.ComponentModel.DataAnnotations
+@using System.Net.Http.Headers
+@using System.Security.Claims
 @using MyWorkDashboard.Shared.Services
+@using MyWorkDashboard.Shared.UserPreferences
 @namespace MyWorkDashboard.Shared
+@implements IDisposable
 
 @inject ClipboardService clipboardService
+@inject UserPreferenceService userPreferenceService
 
-<Dropdown  Trigger="new Trigger[] { Trigger.ContextMenu }" @ref="_dropDown">
+<Dropdown Trigger="new Trigger[] { Trigger.ContextMenu }" @ref="_dropDown">
     <Overlay>
         <Menu SelectedKeys="new string[]{}">
             <MenuItem Icon="@IconType.Outline.FileAdd" OnClick="AddNew">新規追加</MenuItem>
             @if (clipboardService.Duty != null)
             {
                 <MenuItem Icon="@IconType.Outline.Copy" OnClick="Paste">貼り付け</MenuItem>
+            }
+            @if (TemplateMenuCommands != null)
+            {
+                bool _disabled = TemplateMenuCommands.Length < 1;
+
+                <SubMenu Key="sub1" TitleTemplate=@groupMenuTitle Disabled="_disabled">
+                    @foreach (var command in TemplateMenuCommands)
+                    {
+                        <MenuItem Icon="@command.IconName" OnClick="command.Execute">@command.MenuName</MenuItem>
+                    }
+                </SubMenu>
             }
         </Menu>
     </Overlay>
@@ -24,6 +40,16 @@
         </div>
     </Unbound>
 </Dropdown>
+
+@code {
+
+    RenderFragment groupMenuTitle =
+    @<span>
+        <Icon Type="group" Theme="outline" />
+        <span>定型タスク</span>
+    </span>;
+
+}
 
 <style>
     .time-row {
@@ -50,15 +76,56 @@
 @code {
 
     Dropdown _dropDown;
+    private TemplateMenuCommand[] TemplateMenuCommands;
 
     [Parameter, Required]
     public TimeRow Model { get; set; }
 
     [Parameter]
-    public EventCallback<TimeRow> OnAddNew{ get; set; }
+    public EventCallback<TimeRow> OnAddNew { get; set; }
 
     [Parameter]
-    public EventCallback<TimeRow> OnPaste{ get; set; }
+    public EventCallback<TimeRow> OnPaste { get; set; }
+
+    [Parameter]
+    public EventCallback<TemplateMenuCommand> OnAddByTemplate { get; set; }
+
+    protected override async void OnInitialized()
+    {
+        userPreferenceService.TemplateUpdated += OnTemplateUpdated;
+        await CreateNewCommands();
+    }
+
+    private async void OnTemplateUpdated(object? sender, EventArgs e)
+    {
+        UnsubscribeAllCommands();
+        await CreateNewCommands();
+    }
+
+    private async Task CreateNewCommands()
+    {
+        TemplateMenuCommands = (await userPreferenceService.GetAllTemplates())
+            .Select(t => new TemplateMenuCommand(t, Model)).ToArray();
+        foreach (TemplateMenuCommand command in TemplateMenuCommands)
+        {
+            command.Excuted += CommandOnExcuted;
+        }
+    }
+
+    private void UnsubscribeAllCommands()
+    {
+        if (TemplateMenuCommands?.Length < 1) return;
+
+        foreach (TemplateMenuCommand command in TemplateMenuCommands)
+        {
+            command.Excuted -= CommandOnExcuted;
+        }
+    }
+
+    private async void CommandOnExcuted(object? sender, EventArgs e)
+    {
+        await OnAddByTemplate.InvokeAsync(sender as TemplateMenuCommand);
+    }
 
     private async Task AddNew()
     {
@@ -70,6 +137,12 @@
     {
         _dropDown?.SetVisible(false);
         await OnPaste.InvokeAsync(Model);
+    }
+
+    public void Dispose()
+    {
+        userPreferenceService.TemplateUpdated -= OnTemplateUpdated;
+        UnsubscribeAllCommands();
     }
 
 }

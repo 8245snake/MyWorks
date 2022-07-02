@@ -6,11 +6,9 @@ namespace MyWorkDashboard.Shared.Service;
 public class TemplateService
 {
     private readonly IPreferenceRepository _preferenceRepository;
-    private readonly DutyTemplate[] _templates;
     public TemplateService(IPreferenceRepository preferenceRepository)
     {
         _preferenceRepository = preferenceRepository;
-        _templates = _preferenceRepository.GetAllDutyTemplatesAsync().Result;
     }
 
     /// <summary>
@@ -20,19 +18,25 @@ public class TemplateService
     /// <param name="startTime">開始日時</param>
     /// <param name="service">サービス</param>
     /// <returns>作成した業務データ</returns>
-    public async Task<BusinessDuty> CreateNewDutyFromTemplate(string templateId, DateTime startTime, DutyService service)
+    public async Task<BusinessDuty?> CreateNewDutyFromTemplate(string templateId, DateTime startTime, DutyService service)
     {
+        var allTemplates = await _preferenceRepository.GetAllDutyTemplatesAsync();
+        DutyTemplate? template = allTemplates.FirstOrDefault(t => t.Id == templateId);
+        if (template == null) return null;
+
         var date = DateOnly.FromDateTime(startTime);
         var start = TimeOnly.FromDateTime(startTime);
-        var end = start.AddMinutes(60);
+        var end = start.AddMinutes(template.Minute);
         BusinessDuty newDuty = await service.CreateNewDutyAsync(date, new WorkTimeRange(start, end));
-        DutyTemplate? template = _templates.FirstOrDefault(t => t.Id == templateId);
-        if(template == null) return newDuty;
 
         newDuty.Title = template.Title;
         newDuty.Description = template.Description;
         newDuty.EndTime = newDuty.StartTime.AddMinutes(template.Minute);
         newDuty.WorkCodeFamilyId = template.WorkCodeFamilyId;
+        if (string.IsNullOrWhiteSpace(newDuty.WorkCodeFamilyId))
+        {
+            newDuty.WorkCodeFamilyId = service.DefaultWorkCodeId;
+        }
         return newDuty;
     }
 }

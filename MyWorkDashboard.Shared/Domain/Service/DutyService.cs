@@ -7,6 +7,8 @@ public class DutyService
     private readonly IDutyRepository _dutyRepository;
     private readonly string _defaultWorkCodeId;
 
+    public string DefaultWorkCodeId => _defaultWorkCodeId;
+
     public DutyService(IDutyRepository dutyRepository, string defaultWorkCodeId)
     {
         _dutyRepository = dutyRepository;

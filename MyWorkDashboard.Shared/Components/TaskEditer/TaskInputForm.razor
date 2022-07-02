@@ -10,6 +10,7 @@
 @inject MessageService messageService
 @inject SchedulingServive schedulingServive
 @inject ControlService controlService
+@inject UserPreferenceService userPreferenceService
 
 <div class="task-frame" hidden="@_isEmpty">
 
@@ -35,6 +36,11 @@
         <Col Offset="1">
             <Tooltip Placement="@Placement.Bottom" Title=@("ToDoリストに送る")>
                 <Button Type="@ButtonType.Default" Shape="@ButtonShape.Round" Class="control-buttons" Icon="@IconType.Outline.VerticalAlignBottom" OnClick="SendToDoList"></Button>
+            </Tooltip>
+        </Col>
+        <Col>
+            <Tooltip Placement="@Placement.Bottom" Title=@("このタスクを定型タスクに登録する")>
+                <Button Type="@ButtonType.Default" Shape="@ButtonShape.Round" Class="control-buttons" Icon="@IconType.Outline.Star" OnClick="CreateTemplate"></Button>
             </Tooltip>
         </Col>
         <Col>
@@ -276,6 +282,25 @@
 
         await schedulingServive.DeleteDutyAsync(duty.Id);
         await schedulingServive.ChangeSelectedDutyAsync(null, this);
+    }
+
+    private async Task CreateTemplate()
+    {
+        var source = schedulingServive.SelectedDuty;
+        if (source == null) return;
+
+        var newTemplate = await userPreferenceService.CreateNewTemplate();
+        newTemplate.MenuName = source.Title;
+        newTemplate.Title = source.Title;
+        newTemplate.Description = source.Description;
+        newTemplate.Minute = (int)(source.EndTime - source.StartTime).TotalMinutes;
+        if (source is BusinessDuty businessDuty)
+        {
+            newTemplate.WorkCodeFamilyId = businessDuty.WorkCodeFamilyId;
+        }
+
+        await userPreferenceService.UpdateTemplate(newTemplate);
+        await messageService.Success("定型タスクに登録しました");
     }
 
     public void Dispose()
