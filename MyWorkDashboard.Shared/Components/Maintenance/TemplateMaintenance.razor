@@ -9,8 +9,9 @@
 @inject SchedulingServive schedulingServive
 @inject UserPreferenceService userPreferenceService
 
-@if (_models?.Count > 0)
-{
+
+<div hidden="@_isEmpty">
+
     <AntDesign.Row>
         <AntDesign.Col Span="22" Style="overflow-y: scroll; height: 30vh;" Class="template-container-color">
             <SortableContainer TItem="TemplateDutyVM" Items="@_models" SelectedStyleClass="list-selected-color" @ref="_container" OnItemSelected="OnItemSelected">
@@ -18,7 +19,7 @@
                     <div style="padding: 5px; border: 1px black solid;">
                         <AntDesign.Row Gutter="6">
                             <AntDesign.Col>
-                                <Icon Type="@context.IconName" Theme="outline" />
+                                <Icon Type="@context.IconName" Theme="outline"/>
                             </AntDesign.Col>
                             <AntDesign.Col Flex=@("auto")>
                                 @(context.MenuName)
@@ -54,19 +55,19 @@
                                 WrapperColSpan="20">
 
                     <FormItem Label="メニュー表示名">
-                        <Input @bind-Value="@context.MenuName" />
+                        <Input @bind-Value="@context.MenuName"/>
                     </FormItem>
                     <FormItem Label="アイコン">
-                        <IconSelector @bind-Value="@context.IconName" />
+                        <IconSelector @bind-Value="@context.IconName"/>
                     </FormItem>
                     <FormItem Label="タスクの概要">
-                        <Input @bind-Value="@context.Title" />
+                        <Input @bind-Value="@context.Title"/>
                     </FormItem>
                     <FormItem Label="タスクの詳細">
                         <TextArea Rows="4" @bind-Value="@context.Description" />
                     </FormItem>
                     <FormItem Label="作業コード">
-                        <WorkCodeSelector DataSource="_codes" @bind-Value="@context.WorkCode" />
+                        <WorkCodeSelector DataSource="_codes" @bind-Value="@context.WorkCode" @ref="_codeSelector"/>
                     </FormItem>
                     <FormItem Label="所要時間">
                         <AntDesign.InputNumber @bind-Value="@context.Minute" Min="1"></AntDesign.InputNumber>
@@ -80,9 +81,9 @@
 
         </AntDesign.Col>
     </AntDesign.Row>
-}
-else
-{
+</div>
+
+<div hidden="@(!_isEmpty)">
     <Empty>
         <DescriptionTemplate>
             <Paragraph>定型タスクがありません</Paragraph>
@@ -91,7 +92,8 @@ else
             <Button Type="@ButtonType.Primary" OnClick="CreateNew">新規作成</Button>
         </ChildContent>
     </Empty>
-}
+</div>
+
 
 
 @code {
@@ -102,13 +104,18 @@ else
     private SortableContainer<TemplateDutyVM> _container;
     private Popconfirm _deleteConfirm;
 
+    private bool _isEmpty => _models?.Count <= 0;
     private bool _propertyChanged = false;
 
     public bool PropertyChanged => _propertyChanged;
     private TemplateDutyVM _templateDutyVm;
+    private WorkCodeSelector? _codeSelector;
 
     protected override async void OnInitialized()
     {
+        schedulingServive.WorkCodeUpdated -= OnWorkCodeUpdated;
+        schedulingServive.WorkCodeUpdated += OnWorkCodeUpdated;
+
         _codes = await schedulingServive.GetAllWorkCodeFamily();
         _models = (await userPreferenceService.GetAllTemplates()).Select(item => new TemplateDutyVM(item)).ToList();
 
@@ -120,9 +127,24 @@ else
         await InvokeAsync(StateHasChanged);
     }
 
+    private async void OnWorkCodeUpdated(object? sender, EventArgs e)
+    {
+        _codes = await schedulingServive.GetAllWorkCodeFamily();
+        if (_codeSelector != null)
+        {
+            await _codeSelector.UpdateDataSource(_codes);
+        }
+    }
+
     private async void OnItemSelected(TemplateDutyVM templateDutyVm)
     {
         _templateDutyVm = templateDutyVm;
+        if (_templateDutyVm != null)
+        {
+            WorkCodeFamily? code = _codes.FirstOrDefault(c => c.Id == _templateDutyVm.WorkCodeFamilyId);
+            _templateDutyVm.WorkCode = code;
+        }
+
         await InvokeAsync(StateHasChanged);
     }
 
@@ -165,13 +187,14 @@ else
         DutyTemplate template = await userPreferenceService.CreateNewTemplate();
         var model = new TemplateDutyVM(template);
         _models.Add(model);
-        _container.Rebuild(_models);
+        _container?.Rebuild(_models);
 
         _templateDutyVm = model;
-        _container.SelectItem(model);
+        _container?.SelectItem(model);
 
         _propertyChanged = true;
         await InvokeAsync(StateHasChanged);
+
     }
 
     private async void Delete()
@@ -204,6 +227,5 @@ else
         _propertyChanged = false;
 
     }
-
 
 }

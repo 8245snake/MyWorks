@@ -19,6 +19,7 @@ public class SchedulingServive
     public event EventHandler SelectedDateChanged;
     public event EventHandler ToDoItemChanged;
     public event EventHandler ToDoItemDeleted;
+    public event EventHandler WorkCodeUpdated;
 
     #endregion
 
@@ -64,7 +65,12 @@ public class SchedulingServive
     public Task<WorkCodeFamily?> FindWorkCodeFamilyById(string id) => _workCodeService.FindWorkCodeFamilyById(id);
     public Task<string> GetDutyColorCodeAsync(BusinessDuty? duty) => _workCodeService.GetDutyColorCodeAsync(duty?.WorkCodeFamilyId);
     public string GetWorkCodeFamilyColorCode(string familyId) => _workCodeService.GetDutyColorCodeAsync(familyId).Result;
-    public Task SaveAll(IEnumerable<WorkCodeFamily> items) => _workCodeService.SaveAll(items);
+    public async Task SaveAll(IEnumerable<WorkCodeFamily> items)
+    {
+        await _workCodeService.SaveAll(items);
+        WorkCodeUpdated?.Invoke(this, EventArgs.Empty);
+    }
+
     public Task RegisterColorAsync(string id, string colorCode) => _workCodeService.RegisterColorAsync(id, colorCode);
     public Task<string> GetNewWorkCodeIdAsync() => _workCodeService.GetNewWorkCodeIdAsync();
 

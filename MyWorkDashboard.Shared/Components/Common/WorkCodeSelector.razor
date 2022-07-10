@@ -48,4 +48,23 @@
         _dataSource = DataSource.Select(d => new WorkCodeVM(d)).ToArray();
     }
 
+    /// <summary>
+    /// DataSourceを更新します
+    /// </summary>
+    /// <param name="codes"></param>
+    /// <returns></returns>
+    public Task UpdateDataSource(IEnumerable<WorkCodeFamily> codes)
+    {
+        var selectedId = _value?.Id;
+        DataSource = codes.ToArray();
+        _dataSource = DataSource.Select(d => new WorkCodeVM(d)).ToArray();
+        if (!string.IsNullOrWhiteSpace(selectedId))
+        {
+            var selectedItem = DataSource.FirstOrDefault(code => code.Id == selectedId);
+            Value = selectedItem;
+        }
+
+        return InvokeAsync(StateHasChanged);
+    }
+
 }

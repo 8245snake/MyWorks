@@ -66,6 +66,8 @@ public class TemplateDutyVM
         }
     }
 
+    public string? WorkCodeFamilyId => _dutyTemplate?.WorkCodeFamilyId;
+
     public WorkCodeFamily? WorkCode
     {
         get => _workCode;
