@@ -85,11 +85,13 @@
     private  async Task GoYesterday()
     {
         await ChangeDate(_dateTime.Value.AddDays(-1));
+        _datePicker.InvokeStateHasChanged();
     }
 
     private  async Task GoTommorrow()
     {
         await ChangeDate(_dateTime.Value.AddDays(1));
+        _datePicker.InvokeStateHasChanged();
     }
 
     private async Task AddNewSchedule()
