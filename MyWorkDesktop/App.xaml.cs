@@ -28,26 +28,58 @@ namespace MyWorkDesktop
             string myDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().FullName);
             string baseDir = Path.Combine(myDir, "data");
 
-            string masterFilePath = Path.Combine(baseDir, "master.txt");
-            TsvWorkCodeFamilyRepository masterRepo = new TsvWorkCodeFamilyRepository(masterFilePath);
-
-            string dutyDataDir = Path.Combine(baseDir, "json");
-            JsonDutyRepository dataRepo = new JsonDutyRepository(dutyDataDir);
-
-            string todoDataDir = Path.Combine(baseDir, "todo");
-            JsonToDoItemRepository todoRepo = new JsonToDoItemRepository(todoDataDir);
-
-            serviceCollection.AddScoped(sp => new SchedulingServive(dataRepo, masterRepo, masterRepo, todoRepo));
-
-            serviceCollection.AddScoped(sp => new ControlService(new FocusManeger(this.Handle)));
-            serviceCollection.AddSingleton<PageNavigatingService>();
-            serviceCollection.AddScoped(sp=> new UserPreferenceService(new JsonPreferenceRepository(baseDir)));
+            var masterRepo = GetTsvWorkCodeFamilyRepository(baseDir);
+            var dataRepo = GetDutyRepository(baseDir);
+            var todoRepo = GetToDoItemRepository(baseDir);
+            var preferenceRepository = new JsonPreferenceRepository(baseDir);
+            serviceCollection.AddScoped(sp => new SchedulingServive(dataRepo, masterRepo, masterRepo, todoRepo, preferenceRepository));
+            serviceCollection.AddScoped(sp => new UserPreferenceService(preferenceRepository));
             serviceCollection.AddScoped<JsInteropService>();
             serviceCollection.AddScoped<ClipboardService>();
+            serviceCollection.AddScoped(sp => new ControlService(new FocusManeger(this.Handle)));
+            serviceCollection.AddSingleton<PageNavigatingService>();
 
             Resources.Add("services", serviceCollection.BuildServiceProvider());
 
             this.DispatcherUnhandledException += OnDispatcherUnhandledException;
+        }
+
+        private static JsonToDoItemRepository GetToDoItemRepository(string baseDir)
+        {
+            string todoDataDir = Path.Combine(baseDir, "todo");
+            JsonToDoItemRepository todoRepo = new JsonToDoItemRepository(todoDataDir);
+            return todoRepo;
+        }
+
+        private static JsonDutyRepository GetDutyRepository(string baseDir)
+        {
+            string dutyDataDir = Path.Combine(baseDir, "json");
+            JsonDutyRepository dataRepo = new JsonDutyRepository(dutyDataDir);
+            return dataRepo;
+        }
+
+        private static TsvWorkCodeFamilyRepository GetTsvWorkCodeFamilyRepository(string baseDir)
+        {
+            try
+            {
+                string masterFilePath = Path.Combine(baseDir, "master.txt");
+                if (!File.Exists(masterFilePath)) File.WriteAllText(masterFilePath, "");
+
+                var text = File.ReadAllText(masterFilePath);
+                if (string.IsNullOrWhiteSpace(text))
+                {
+                    string templateFilePath = Path.Combine(baseDir, "master.tmplate");
+                    File.Copy(templateFilePath, masterFilePath, true);
+                }
+
+                TsvWorkCodeFamilyRepository masterRepo = new TsvWorkCodeFamilyRepository(masterFilePath);
+                return masterRepo;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
         private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
