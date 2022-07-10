@@ -10,6 +10,7 @@
 @inject MessageService messageService
 @inject SchedulingServive schedulingServive
 @inject ControlService controlService
+@inject UserPreferenceService userPreferenceService
 
 <div class="task-frame" hidden="@_isEmpty">
 
@@ -38,9 +39,14 @@
             </Tooltip>
         </Col>
         <Col>
-            <Popconfirm Placement="@Placement.Bottom" Title="削除してよろしいですか" OkText="削除する" CancelText="キャンセル" OnConfirm="OnDeleteButtonClick">
+            <Tooltip Placement="@Placement.Bottom" Title=@("このタスクを定型タスクに登録する")>
+                <Button Type="@ButtonType.Default" Shape="@ButtonShape.Round" Class="control-buttons" Icon="@IconType.Outline.Star" OnClick="CreateTemplate"></Button>
+            </Tooltip>
+        </Col>
+        <Col>
+            <Popconfirm Placement="@Placement.Bottom" Title="削除してよろしいですか" OkText="削除する" CancelText="キャンセル" OnConfirm="OnDeleteButtonClick" @ref="_deleteConfirm">
                 <Tooltip Placement="@Placement.Bottom" Title=@("タスク削除")>
-                    <Button Danger Type="@ButtonType.Primary" Shape="@ButtonShape.Round" Class="control-buttons" Icon="@IconType.Outline.Delete"></Button>
+                <Button Danger Type="@ButtonType.Primary" Shape="@ButtonShape.Round" Class="control-buttons" Icon="@IconType.Outline.Delete"></Button>
                 </Tooltip>
             </Popconfirm>
         </Col>
@@ -100,7 +106,7 @@
 {
 
     private bool _isEmpty => schedulingServive.SelectedDuty == null;
-    private bool _isBreakTime;
+    private Popconfirm _deleteConfirm;
 
     /// <summary>
     /// タイトル
@@ -217,9 +223,16 @@
 
     private async Task OnDeleteButtonClick()
     {
-        await schedulingServive.DeleteDutyAsync(schedulingServive.SelectedDuty.Id);
-        await schedulingServive.ChangeSelectedDutyAsync(null, this);
-        await messageService.Info("削除されました", 1);
+        try
+        {
+            await _deleteConfirm.Close();
+            await schedulingServive.DeleteDutyAsync(schedulingServive.SelectedDuty.Id);
+            await schedulingServive.ChangeSelectedDutyAsync(null, this);
+            await messageService.Info("削除されました", 1);
+        }
+        catch
+        {
+        }
     }
 
     private async Task OnBackButtonClick()
@@ -269,6 +282,25 @@
 
         await schedulingServive.DeleteDutyAsync(duty.Id);
         await schedulingServive.ChangeSelectedDutyAsync(null, this);
+    }
+
+    private async Task CreateTemplate()
+    {
+        var source = schedulingServive.SelectedDuty;
+        if (source == null) return;
+
+        var newTemplate = await userPreferenceService.CreateNewTemplate();
+        newTemplate.MenuName = source.Title;
+        newTemplate.Title = source.Title;
+        newTemplate.Description = source.Description;
+        newTemplate.Minute = (int)(source.EndTime - source.StartTime).TotalMinutes;
+        if (source is BusinessDuty businessDuty)
+        {
+            newTemplate.WorkCodeFamilyId = businessDuty.WorkCodeFamilyId;
+        }
+
+        await userPreferenceService.UpdateTemplate(newTemplate);
+        await messageService.Success("定型タスクに登録しました");
     }
 
     public void Dispose()

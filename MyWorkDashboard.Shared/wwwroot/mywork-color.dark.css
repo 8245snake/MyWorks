@@ -66,3 +66,8 @@
     background-color: #666;
     opacity: 1.0;
 }
+
+/*定型タスク編集画面*/
+.template-container-color {
+    border: 0.5px white solid;
+}

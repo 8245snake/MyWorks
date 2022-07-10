@@ -8,15 +8,17 @@
         <Menu Mode="MenuMode.Inline"
               DefaultSelectedKeys=@(new[] {"1"})
               Style="height: 100%;" @bind-SelectedKeys="_selectedKeys">
-            <MenuItem Key="1">作業コード</MenuItem>
+            <MenuItem Key="1">定型タスク</MenuItem>
+            <MenuItem Key="2">作業コード</MenuItem>
         </Menu>
     </Sider>
-    <Content Style="height: 87vh;overflow-y: scroll;">
-        @if (_selectedKeys.Contains("1"))
-        {
+    <Content Style="height: calc(100vh - 112px); overflow-y: scroll;">
+        <div hidden="@(!_selectedKeys.Contains("1"))">
+            <TemplateMaintenance/>
+        </div>
+        <div hidden="@(!_selectedKeys.Contains("2"))">
             <WorkCodeMaintenance/>
-        }
-
+        </div>
     </Content>
 </Layout>
 

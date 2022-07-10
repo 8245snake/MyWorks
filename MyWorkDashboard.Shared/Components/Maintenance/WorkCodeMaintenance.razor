@@ -7,7 +7,7 @@
 @inject SchedulingServive schedulingServive
 
 <Row>
-    <Col Span="22">
+    <Col Span="22" Style="overflow-y: scroll; height: calc(100vh - 112px);">
         <SortableContainer Items="_workCodes" SelectedStyleClass="list-selected-color" @ref="_container">
             <ItemTemplate>
                 <div style="padding: 5px; border: 1px black solid;">
@@ -41,17 +41,14 @@
         </SortableContainer>
     </Col>
     <Col Span="2">
-        <Affix OffsetTop="100">
-            <div>
-                <Button OnClick="CreateNew" Shape="@ButtonShape.Round" Icon="@IconType.Outline.Plus" Block>新規</Button>
-                <Button OnClick="GoUp" Shape="@ButtonShape.Round" Icon="@IconType.Outline.Up" Block>上へ</Button>
-                <Button OnClick="GoDown" Shape="@ButtonShape.Round" Icon="@IconType.Outline.Down" Block>下へ</Button>
-                <Button OnClick="GoTop" Shape="@ButtonShape.Round" Icon="@IconType.Outline.VerticalAlignTop" Block>先頭</Button>
-                <Button OnClick="GoBottom" Shape="@ButtonShape.Round" Icon="@IconType.Outline.VerticalAlignBottom" Block>末尾</Button>
-                <Button Type="@ButtonType.Primary" OnClick="Save" Shape="@ButtonShape.Round" Icon="@IconType.Outline.Save" Block Disabled="@(!_propertyChanged)">保存</Button>
-            </div>
-        </Affix>
-
+        <div>
+            <Button OnClick="CreateNew" Shape="@ButtonShape.Round" Icon="@IconType.Outline.Plus" Block>新規</Button>
+            <Button OnClick="GoUp" Shape="@ButtonShape.Round" Icon="@IconType.Outline.Up" Block>上へ</Button>
+            <Button OnClick="GoDown" Shape="@ButtonShape.Round" Icon="@IconType.Outline.Down" Block>下へ</Button>
+            <Button OnClick="GoTop" Shape="@ButtonShape.Round" Icon="@IconType.Outline.VerticalAlignTop" Block>先頭</Button>
+            <Button OnClick="GoBottom" Shape="@ButtonShape.Round" Icon="@IconType.Outline.VerticalAlignBottom" Block>末尾</Button>
+            <Button Type="@ButtonType.Primary" OnClick="Save" Shape="@ButtonShape.Round" Icon="@IconType.Outline.Save" Block Disabled="@(!_propertyChanged)">保存</Button>
+        </div>
     </Col>
 </Row>
 
@@ -118,9 +115,11 @@
         WorkCodeFamily code = new WorkCodeFamily(id, new WorkCategory("", ""), new WorkCode("", ""));
 
         var list = _workCodes.ToList();
-        list.Add(new WorkCodeItemVM(code, schedulingServive));
+        var model = new WorkCodeItemVM(code, schedulingServive);
+        list.Add(model);
         _workCodes = list.ToArray();
         _container.Rebuild(_workCodes);
+        _container.SelectItem(model);
 
         _propertyChanged = true;
     }

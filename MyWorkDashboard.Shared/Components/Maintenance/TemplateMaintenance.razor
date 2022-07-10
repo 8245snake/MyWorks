@@ -1,0 +1,209 @@
+﻿@namespace MyWorkDashboard.Shared
+
+@using MyWorkDashboard.Shared.Services
+@using MyWorkDashboard.Shared.WorkCodeFamilies
+@using Microsoft.AspNetCore.Components
+@using MyWorkDashboard.Shared.ToDoTasks
+@using MyWorkDashboard.Shared.UserPreferences
+
+@inject SchedulingServive schedulingServive
+@inject UserPreferenceService userPreferenceService
+
+@if (_models?.Count > 0)
+{
+    <AntDesign.Row>
+        <AntDesign.Col Span="22" Style="overflow-y: scroll; height: 30vh;" Class="template-container-color">
+            <SortableContainer TItem="TemplateDutyVM" Items="@_models" SelectedStyleClass="list-selected-color" @ref="_container" OnItemSelected="OnItemSelected">
+                <ItemTemplate>
+                    <div style="padding: 5px; border: 1px black solid;">
+                        <AntDesign.Row Gutter="6">
+                            <AntDesign.Col>
+                                <Icon Type="@context.IconName" Theme="outline" />
+                            </AntDesign.Col>
+                            <AntDesign.Col Flex=@("auto")>
+                                @(context.MenuName)
+                            </AntDesign.Col>
+                        </AntDesign.Row>
+                    </div>
+                </ItemTemplate>
+            </SortableContainer>
+        </AntDesign.Col>
+        <AntDesign.Col Span="2">
+            <div>
+                <Button OnClick="CreateNew" Shape="@ButtonShape.Round" Icon="@IconType.Outline.Plus" Block>新規</Button>
+                <Button OnClick="GoUp" Shape="@ButtonShape.Round" Icon="@IconType.Outline.Up" Block>上へ</Button>
+                <Button OnClick="GoDown" Shape="@ButtonShape.Round" Icon="@IconType.Outline.Down" Block>下へ</Button>
+                <Button OnClick="GoTop" Shape="@ButtonShape.Round" Icon="@IconType.Outline.VerticalAlignTop" Block>先頭</Button>
+                <Button OnClick="GoBottom" Shape="@ButtonShape.Round" Icon="@IconType.Outline.VerticalAlignBottom" Block>末尾</Button>
+
+                <Popconfirm Placement="@Placement.Bottom" Title="削除してよろしいですか" OkText="削除する" CancelText="キャンセル" OnConfirm="Delete" @ref="_deleteConfirm" Style="display: block;">
+                    <Button Type="@ButtonType.Primary" Shape="@ButtonShape.Round" Icon="@IconType.Outline.Delete" Block Danger>削除</Button>
+                </Popconfirm>
+                <Button Type="@ButtonType.Primary" OnClick="Save" Shape="@ButtonShape.Round" Icon="@IconType.Outline.Save" Block Disabled="@(!_propertyChanged)">保存</Button>
+            </div>
+        </AntDesign.Col>
+    </AntDesign.Row>
+
+    <AntDesign.Row>
+        <AntDesign.Col Span="24" Style="padding: 10px; min-height: 50vh;">
+            @if (_templateDutyVm != null)
+            {
+                <AntDesign.Form Model="@_templateDutyVm"
+                                Layout="@FormLayout.Horizontal"
+                                LabelColSpan="2"
+                                WrapperColSpan="20">
+
+                    <FormItem Label="メニュー表示名">
+                        <Input @bind-Value="@context.MenuName" />
+                    </FormItem>
+                    <FormItem Label="アイコン">
+                        <IconSelector @bind-Value="@context.IconName" />
+                    </FormItem>
+                    <FormItem Label="タスクの概要">
+                        <Input @bind-Value="@context.Title" />
+                    </FormItem>
+                    <FormItem Label="タスクの詳細">
+                        <TextArea Rows="4" @bind-Value="@context.Description" />
+                    </FormItem>
+                    <FormItem Label="作業コード">
+                        <WorkCodeSelector DataSource="_codes" @bind-Value="@context.WorkCode" />
+                    </FormItem>
+                    <FormItem Label="所要時間">
+                        <AntDesign.InputNumber @bind-Value="@context.Minute" Min="1"></AntDesign.InputNumber>
+                    </FormItem>
+                </AntDesign.Form>
+            }
+            else
+            {
+                <Empty Description="@("定型タスクが選択されていません")"></Empty>
+            }
+
+        </AntDesign.Col>
+    </AntDesign.Row>
+}
+else
+{
+    <Empty>
+        <DescriptionTemplate>
+            <Paragraph>定型タスクがありません</Paragraph>
+        </DescriptionTemplate>
+        <ChildContent>
+            <Button Type="@ButtonType.Primary" OnClick="CreateNew">新規作成</Button>
+        </ChildContent>
+    </Empty>
+}
+
+
+@code {
+
+    private Form<TemplateDutyVM> _form;
+    private WorkCodeFamily[] _codes = { };
+    private List<TemplateDutyVM> _models;
+    private SortableContainer<TemplateDutyVM> _container;
+    private Popconfirm _deleteConfirm;
+
+    private bool _propertyChanged = false;
+
+    public bool PropertyChanged => _propertyChanged;
+    private TemplateDutyVM _templateDutyVm;
+
+    protected override async void OnInitialized()
+    {
+        _codes = await schedulingServive.GetAllWorkCodeFamily();
+        _models = (await userPreferenceService.GetAllTemplates()).Select(item => new TemplateDutyVM(item)).ToList();
+
+        foreach (TemplateDutyVM vm in _models)
+        {
+            vm.PropertyChanged += ItemOnPropertyChanged;
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async void OnItemSelected(TemplateDutyVM templateDutyVm)
+    {
+        _templateDutyVm = templateDutyVm;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async void ItemOnPropertyChanged(object? sender, EventArgs e)
+    {
+        foreach (TemplateDutyVM vm in _models)
+        {
+            vm.PropertyChanged -= ItemOnPropertyChanged;
+        }
+        _propertyChanged = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void GoUp()
+    {
+        _container.Up();
+        _propertyChanged = true;
+    }
+
+    private void GoDown()
+    {
+        _container.Down();
+        _propertyChanged = true;
+    }
+
+    private void GoTop()
+    {
+        _container.GoTop();
+        _propertyChanged = true;
+    }
+
+    private void GoBottom()
+    {
+        _container.GoBottom();
+        _propertyChanged = true;
+    }
+
+    private async Task CreateNew()
+    {
+        DutyTemplate template = await userPreferenceService.CreateNewTemplate();
+        var model = new TemplateDutyVM(template);
+        _models.Add(model);
+        _container.Rebuild(_models);
+
+        _templateDutyVm = model;
+        _container.SelectItem(model);
+
+        _propertyChanged = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async void Delete()
+    {
+        TemplateDutyVM model = _container.SelectedItem;
+        if (model == null) return;
+
+        _deleteConfirm?.Close();
+
+        _models.Remove(model);
+        _container.Rebuild(_models);
+
+        _templateDutyVm = null;
+        _container.SelectItem(null);
+
+        _propertyChanged = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task Save()
+    {
+        var arr = _container.SortedItems;
+        await userPreferenceService.SaveAllTemplates(arr.Select(item => item.GetDutyTemplate()).ToArray());
+
+        foreach (var vm in _models)
+        {
+            vm.PropertyChanged -= ItemOnPropertyChanged;
+            vm.PropertyChanged += ItemOnPropertyChanged;
+        }
+        _propertyChanged = false;
+
+    }
+
+
+}

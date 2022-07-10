@@ -29,7 +29,30 @@
     [Parameter]
     public string SelectedStyleClass { get; set; }
 
+    [Parameter]
+    public EventCallback<TItem> OnItemSelected { get; set; }
+
     public TItem[] SortedItems => Models.Select(m => m.Item).ToArray();
+
+    /// <summary>
+    /// 選択中の要素
+    /// </summary>
+    public TItem SelectedItem
+    {
+        get
+        {
+            var item = Models.FirstOrDefault(m => m.IsSelected);
+            if (item == null)
+            {
+                return default;
+            }
+            return item.Item;
+        }
+        set
+        {
+            SelectItem(value);
+        }
+    }
 
     private List<PanelModel> Models = new List<PanelModel>();
 
@@ -39,13 +62,19 @@
     }
 
 
-    private void ModelOnSelected(object? sender, EventArgs e)
+    private async void ModelOnSelected(object? sender, EventArgs e)
     {
         foreach (PanelModel model in Models)
         {
             model.IsSelected = model == sender;
         }
-        StateHasChanged();
+
+        var t=  InvokeAsync(StateHasChanged);
+
+        if (sender is PanelModel panel)
+        {
+            await OnItemSelected.InvokeAsync(panel.Item);
+        }
     }
 
 
@@ -112,6 +141,19 @@
         }
 
         StateHasChanged();
+    }
+
+    public void SelectItem(TItem item)
+    {
+        if(item?.Equals(default) == true) return;
+
+        foreach (var model in Models)
+        {
+            if (model.Item.Equals(item))
+            {
+                model.Click();
+            }
+        }
     }
 
     public ValueTask DisposeAsync()

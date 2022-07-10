@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -25,6 +26,15 @@ namespace MyWorkDesktop
         {
             this.InitializeComponent();
             //var provider = App.Current.Resources["services"] as IServiceProvider;
+
+            var asm = Assembly.Load(new AssemblyName("MyWorkDashboard.Shared"));
+            var version = asm.GetName()?.Version?.ToString();
+            if (!string.IsNullOrWhiteSpace(version))
+            {
+                this.Title += $"    V{version}";
+            }
+
+
         }
 
     }
