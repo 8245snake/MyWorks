@@ -67,7 +67,7 @@
                         <TextArea Rows="4" @bind-Value="@context.Description" />
                     </FormItem>
                     <FormItem Label="作業コード">
-                        <WorkCodeSelector DataSource="_codes" @bind-Value="@context.WorkCode" @ref="_codeSelector"/>
+                        <WorkCodeSelector DataSource="_codes" @bind-Value="@context.WorkCodeId" @ref="_codeSelector"/>
                     </FormItem>
                     <FormItem Label="所要時間">
                         <AntDesign.InputNumber @bind-Value="@context.Minute" Min="1"></AntDesign.InputNumber>
@@ -132,19 +132,13 @@
         _codes = await schedulingServive.GetAllWorkCodeFamily();
         if (_codeSelector != null)
         {
-            await _codeSelector.UpdateDataSource(_codes);
+            await InvokeAsync(StateHasChanged);
         }
     }
 
     private async void OnItemSelected(TemplateDutyVM templateDutyVm)
     {
         _templateDutyVm = templateDutyVm;
-        if (_templateDutyVm != null)
-        {
-            WorkCodeFamily? code = _codes.FirstOrDefault(c => c.Id == _templateDutyVm.WorkCodeFamilyId);
-            _templateDutyVm.WorkCode = code;
-        }
-
         await InvokeAsync(StateHasChanged);
     }
 

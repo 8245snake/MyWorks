@@ -6,7 +6,6 @@ namespace MyWorkDashboard.Shared;
 public class TemplateDutyVM
 {
     DutyTemplate _dutyTemplate;
-    private WorkCodeFamily? _workCode;
     public event EventHandler? PropertyChanged;
 
     public string Id => _dutyTemplate.Id;
@@ -66,14 +65,24 @@ public class TemplateDutyVM
         }
     }
 
-    public string? WorkCodeFamilyId => _dutyTemplate?.WorkCodeFamilyId;
-
-    public WorkCodeFamily? WorkCode
+    public string? WorkCodeFamilyId
     {
-        get => _workCode;
+        get => _dutyTemplate?.WorkCodeFamilyId;
         set
         {
-            _workCode = value;
+            _dutyTemplate.WorkCodeFamilyId = value;
+            PropertyChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+
+    /// <summary>コード</summary>
+    public string? WorkCodeId
+    {
+        get { return _dutyTemplate?.WorkCodeFamilyId; }
+        set
+        {
+            _dutyTemplate.WorkCodeFamilyId = value;
             PropertyChanged?.Invoke(this, EventArgs.Empty);
         }
     }
@@ -86,7 +95,6 @@ public class TemplateDutyVM
     public DutyTemplate GetDutyTemplate()
     {
         var clone = _dutyTemplate.DeepCopy();
-        clone.WorkCodeFamilyId = WorkCode?.Id;
         return clone;
     }
 }

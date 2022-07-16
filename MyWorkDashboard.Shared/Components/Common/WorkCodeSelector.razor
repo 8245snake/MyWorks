@@ -8,7 +8,7 @@
 <Select DataSource="@_dataSource"
         @bind-Value="@Value"
         LabelName="@nameof(WorkCodeVM.Label)"
-        ValueName="@nameof(WorkCodeVM.Value)"
+        ValueName="@nameof(WorkCodeVM.Id)"
         Placeholder="作業コードを選択してください"
         DefaultActiveFirstItem="false"
         EnableSearch>
@@ -16,11 +16,9 @@
 
 @code {
 
-    [Parameter]
-    public EventCallback<WorkCodeFamily?> Selected { get; set; }
 
     [Parameter]
-    public WorkCodeFamily? Value
+    public string? Value
     {
         get => _value;
         set
@@ -33,10 +31,10 @@
         }
     }
 
-    private WorkCodeFamily? _value;
+    private string? _value;
 
     [Parameter]
-    public EventCallback<WorkCodeFamily?> ValueChanged { get; set; }
+    public EventCallback<string?> ValueChanged { get; set; }
 
     [Parameter, Required]
     public IEnumerable<WorkCodeFamily> DataSource { get; set; }
@@ -48,23 +46,5 @@
         _dataSource = DataSource.Select(d => new WorkCodeVM(d)).ToArray();
     }
 
-    /// <summary>
-    /// DataSourceを更新します
-    /// </summary>
-    /// <param name="codes"></param>
-    /// <returns></returns>
-    public Task UpdateDataSource(IEnumerable<WorkCodeFamily> codes)
-    {
-        var selectedId = _value?.Id;
-        DataSource = codes.ToArray();
-        _dataSource = DataSource.Select(d => new WorkCodeVM(d)).ToArray();
-        if (!string.IsNullOrWhiteSpace(selectedId))
-        {
-            var selectedItem = DataSource.FirstOrDefault(code => code.Id == selectedId);
-            Value = selectedItem;
-        }
-
-        return InvokeAsync(StateHasChanged);
-    }
 
 }

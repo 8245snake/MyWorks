@@ -144,13 +144,13 @@
     /// <summary>
     /// 作業コード
     /// </summary>
-    private WorkCodeFamily? SelectedWorkCodeFamily
+    private string? SelectedWorkCodeFamily
     {
         get
         {
             if (schedulingServive.SelectedDuty is BusinessDuty businessDuty)
             {
-                return _codes.FirstOrDefault(c => c.Id == businessDuty.WorkCodeFamilyId);
+                return businessDuty.WorkCodeFamilyId;
             }
             return null;
         }
@@ -158,9 +158,9 @@
         {
             if (schedulingServive.SelectedDuty is BusinessDuty businessDuty)
             {
-                if (businessDuty.WorkCodeFamilyId != value.Id)
+                if (businessDuty.WorkCodeFamilyId != value)
                 {
-                    businessDuty.WorkCodeFamilyId = value.Id;
+                    businessDuty.WorkCodeFamilyId = value;
                     StateHasChanged();
                     InvokeRaiseDutyPropertyChangedAsync();
                 }

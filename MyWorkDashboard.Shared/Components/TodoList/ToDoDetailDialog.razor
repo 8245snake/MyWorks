@@ -38,14 +38,13 @@
     private WorkCodeFamily[] _codes = {};
 
 
-    public class Model
+    private class Model
     {
-
-        ToDoItem _item;
+        private readonly ToDoItem _item;
         public string? Description { get => _item.Description; set => _item.Description = value; }
         public string? Detail { get => _item.Detail.Comment; set => _item.Detail.Comment = value; }
         public int? Priority { get => _item.Detail.Priority; set => _item.Detail.Priority = value; }
-        public WorkCodeFamily? WorkCode { get; set; }
+        public string? WorkCode {get => _item.Detail.WorkCodeFamilyId; set => _item.Detail.WorkCodeFamilyId = value;}
 
         public Model(ToDoItem item)
         {
@@ -55,7 +54,6 @@
         public ToDoItem GeToDoItem()
         {
             var clone = _item.DeepCopy();
-            clone.Detail.WorkCodeFamilyId = WorkCode?.Id;
             return clone;
         }
     }
@@ -71,15 +69,8 @@
 
     public async void ShowModal(ToDoItem todoItem)
     {
-        WorkCodeFamily[] items = await schedulingServive.GetAllWorkCodeFamily();
-        _codes = items;
-        var id = todoItem?.Detail?.WorkCodeFamilyId;
-        WorkCodeFamily? selected = null;
-        if (id != null)
-        {
-            selected = _codes.FirstOrDefault(model => model.Id == id);
-        }
-        model = new Model(todoItem){WorkCode = selected};
+        _codes = await schedulingServive.GetAllWorkCodeFamily();
+        model = new Model(todoItem);
 
         _visible = true;
         StateHasChanged();
