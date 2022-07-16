@@ -104,7 +104,8 @@ else
     {
         if (schedulingServive.SelectedDate == null) return;
         ToDoItem todoItem = await schedulingServive.CreateNewToDoItem(schedulingServive.SelectedDate.Value);
-        todoItem.Detail.Priority = 1;
+        var maxPriority = _todoItems.Max(m => m.Todo.Detail.Priority);
+        todoItem.Detail.Priority = maxPriority + 1;
         ToDoItemVm vm = CreateViewModel(todoItem);
         _todoItems.Add(vm);
         vm.Select();
