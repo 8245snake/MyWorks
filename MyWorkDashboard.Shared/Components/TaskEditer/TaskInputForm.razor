@@ -189,8 +189,8 @@
     {
         _codes = new List<WorkCodeFamily>();
         _codes.AddRange(await schedulingServive.GetAllWorkCodeFamily());
-        schedulingServive.SelectedDutyChanged += OnSelectedDutyChanged;
-        schedulingServive.DutyPropertyChanged += OnPropertyChanged;
+        schedulingServive.SelectedDutyChanged += InvokeStateHasChanged;
+        schedulingServive.DutyPropertyChanged += InvokeStateHasChanged;
 
     }
 
@@ -208,27 +208,23 @@
         }
     }
 
-
-    private void OnSelectedDutyChanged(object? sender, EventArgs e)
+    private async void InvokeStateHasChanged(object? sender, EventArgs e)
     {
         if (sender == this) return;
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
     }
 
-    private void OnPropertyChanged(object? sender, EventArgs e)
-    {
-        if (sender == this) return;
-        StateHasChanged();
-    }
 
     private async Task OnDeleteButtonClick()
     {
         try
         {
-            await _deleteConfirm.Close();
+            var t1 = _deleteConfirm.Close();
+            if (schedulingServive.SelectedDuty == null) return;
+            
             await schedulingServive.DeleteDutyAsync(schedulingServive.SelectedDuty.Id);
-            await schedulingServive.ChangeSelectedDutyAsync(null, this);
-            await messageService.Info("削除されました", 1);
+            await schedulingServive.ChangeSelectedDutyAsync(null, new object());
+            var t2 =  messageService.Info("削除されました", 1);
         }
         catch
         {
@@ -305,7 +301,7 @@
 
     public void Dispose()
     {
-        schedulingServive.SelectedDutyChanged -= OnSelectedDutyChanged;
-        schedulingServive.DutyPropertyChanged -= OnPropertyChanged;
+        schedulingServive.SelectedDutyChanged -= InvokeStateHasChanged;
+        schedulingServive.DutyPropertyChanged -= InvokeStateHasChanged;
     }
 }
