@@ -1,0 +1,73 @@
+﻿
+/*スクロールバー*/
+::-webkit-scrollbar {
+    height: 10px;
+    width: 10px;
+    background: #000;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #999999;
+    -webkit-border-radius: 1ex;
+    -webkit-box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.75);
+}
+
+/*タイムラインエリア全体*/
+.schedule-area-color {
+    background-color: #111;
+}
+
+::-webkit-scrollbar-corner {
+    background: #000;
+}
+
+/*１時間ブロック*/
+.time-border-color {
+    border: 1px #333 solid;
+}
+
+    .time-border-color:hover {
+        background-color: #666;
+    }
+
+/*タスクのバー*/
+.time-bar-color {
+    opacity: 0.5;
+    border: 0.5px white solid;
+}
+
+    .time-bar-color:hover {
+        opacity: 1.0;
+    }
+
+
+.panel-grabbing-color {
+    box-shadow: 3px 3px 12px rgba(255,255,255,.65);
+}
+
+/*選択中のバー*/
+.bar-selected-color {
+    opacity: 1.0;
+    border: 1px white solid;
+}
+
+/*リスト表示のバー*/
+.task-list-bar-color {
+    border: 1px #999 solid;
+}
+
+    .task-list-bar-color:hover {
+        background-color: #666;
+        opacity: 1.0;
+    }
+
+/*リスト表示のバー(選択中)*/
+.list-selected-color {
+    background-color: #666;
+    opacity: 1.0;
+}
+
+/*定型タスク編集画面*/
+.template-container-color {
+    border: 0.5px white solid;
+}
