@@ -12,14 +12,26 @@ namespace MyWorkDashboard.Shared.Services;
 public class SchedulingServive 
 {
     #region イベント
+    /// <summary> 選択中の業務が変化したときに発火する </summary>
+    public event EventHandler? SelectedDutyChanged;
 
-    public event EventHandler SelectedDutyChanged;
-    public event EventHandler DutyPropertyChanged;
-    public event EventHandler DutyDeleted;
-    public event EventHandler SelectedDateChanged;
-    public event EventHandler ToDoItemChanged;
-    public event EventHandler ToDoItemDeleted;
-    public event EventHandler WorkCodeUpdated;
+    /// <summary> 選択中の業務のプロパティが変化したときに発火する </summary>
+    public event EventHandler? DutyPropertyChanged;
+
+    /// <summary> 業務が削除されたときに発火する </summary>
+    public event EventHandler? DutyDeleted;
+
+    /// <summary>  選択中の日付が変化したときに発火する </summary>
+    public event EventHandler? SelectedDateChanged;
+
+    /// <summary>  選択中のToDoメモが変化したときに発火する </summary>
+    public event EventHandler? ToDoItemChanged;
+
+    /// <summary>  選択中のToDoメモが削除されたときに発火する </summary>
+    public event EventHandler? ToDoItemDeleted;
+
+    /// <summary>  作業コードのマスタが更新されたときに発火する </summary>
+    public event EventHandler? WorkCodeUpdated;
 
     #endregion
 
@@ -29,7 +41,7 @@ public class SchedulingServive
     private readonly TemplateService _templateService;
     private readonly DutiesOfDay _dutiesOfDay;
 
-    public Duty SelectedDuty { get; private set; }
+    public Duty? SelectedDuty { get; private set; }
     public DateOnly? SelectedDate { get; private set; }
 
     public SchedulingServive()
@@ -88,7 +100,7 @@ public class SchedulingServive
     public async Task RaiseDutyPropertyChangedAsync(object? sender)
     {
         await _dutyService.UpdateDutyAsync(SelectedDuty);
-        DutyPropertyChanged.Invoke(sender, EventArgs.Empty);
+        DutyPropertyChanged?.Invoke(sender, EventArgs.Empty);
     }
 
 
@@ -108,7 +120,7 @@ public class SchedulingServive
     public async Task DeleteDutyAsync(string id)
     {
         await _dutyService.DeleteDutyAsync(id);
-        DutyDeleted.Invoke(this, EventArgs.Empty);
+        DutyDeleted?.Invoke(this, EventArgs.Empty);
     }
 
     public Task<Duty> AddNewScheduleAsync(DateOnly date) => _dutyService.AddNewScheduleAsync(date);
